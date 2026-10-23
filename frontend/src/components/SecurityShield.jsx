@@ -1,93 +1,130 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { ShieldAlert, EyeOff, Lock, AlertTriangle, Smartphone } from 'lucide-react';
+import { ShieldAlert, EyeOff, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // ═══════════════════════════════════════════════════════════════════════
-//  SECURITY SHIELD v3 — Full Desktop + Mobile + iPad Protection
-//  Blocks: Screenshots, Screen Recording, Copy, Print, Save, Drag
-//  Platforms: Windows, macOS, iOS (iPhone/iPad), Android, ChromeOS
+//  SECURITY SHIELD v4 — PRE-EMPTIVE CAPTURE PROTECTION
+//  The screen is BLACK by default. A 60fps heartbeat makes it transparent
+//  for human eyes. Screenshots capture the BLACK default state.
 // ═══════════════════════════════════════════════════════════════════════
 
-// Detect mobile/tablet platform
 const isTouchDevice = () =>
   'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
 const isIOS = () =>
   /iPad|iPhone|iPod/.test(navigator.userAgent) ||
   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
 const isAndroid = () => /Android/i.test(navigator.userAgent);
-
 const isMobileOrTablet = () => isTouchDevice() || isIOS() || isAndroid();
 
 export default function SecurityShield({ children }) {
   const { user } = useAuth();
   const [isWindowBlurred, setIsWindowBlurred] = useState(false);
   const [screenshotAttempted, setScreenshotAttempted] = useState(false);
-  const [isScreenRecording, setIsScreenRecording] = useState(false);
   const blurTimeoutRef = useRef(null);
   const touchTrackRef = useRef({ count: 0, timer: null });
 
-  // ─── 1. Core Lockout Engine ───────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════
+  //  RAF HEARTBEAT SHIELD — The core pre-emptive protection
+  //  A black overlay is ALWAYS rendered. requestAnimationFrame clears
+  //  it every frame (60fps) so users see through it. But screenshots
+  //  capture the default opaque black state because RAF pauses during
+  //  OS-level screen capture.
+  // ═══════════════════════════════════════════════════════════════════
+  const shieldOverlayRef = useRef(null);
+  const shieldMessageRef = useRef(null);
+
+  useEffect(() => {
+    const overlay = shieldOverlayRef.current;
+    const msg = shieldMessageRef.current;
+    if (!overlay || !msg) return;
+
+    let rafId;
+    let isActive = true;
+
+    const heartbeat = () => {
+      if (!isActive) return;
+      // Make overlay invisible — human sees through it at 60fps
+      overlay.style.opacity = '0';
+      msg.style.opacity = '0';
+      rafId = requestAnimationFrame(heartbeat);
+    };
+
+    // Start with BLACK (default capture state)
+    overlay.style.opacity = '1';
+    msg.style.opacity = '1';
+
+    // Begin heartbeat — makes it transparent for live viewing
+    rafId = requestAnimationFrame(heartbeat);
+
+    // When tab loses focus, STOP the heartbeat → overlay stays black
+    const pauseHeartbeat = () => {
+      isActive = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      overlay.style.opacity = '1';
+      msg.style.opacity = '1';
+    };
+
+    const resumeHeartbeat = () => {
+      if (isActive) return;
+      isActive = true;
+      // Small delay before resuming — ensures any in-progress capture gets black
+      setTimeout(() => {
+        if (isActive) {
+          rafId = requestAnimationFrame(heartbeat);
+        }
+      }, 150);
+    };
+
+    window.addEventListener('blur', pauseHeartbeat);
+    window.addEventListener('focus', resumeHeartbeat);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) pauseHeartbeat();
+      else resumeHeartbeat();
+    });
+
+    return () => {
+      isActive = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('blur', pauseHeartbeat);
+      window.removeEventListener('focus', resumeHeartbeat);
+    };
+  }, []);
+
+  // ─── Lockout Engine ───────────────────────────────────────────────
   const triggerScreenshotLockout = useCallback(() => {
-    // Wipe clipboard
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(
-          '⚠️ [SECURITY ALERT] Educational materials from Mrs. Nashwa Abdelhalim Academy are strictly protected against screenshots and screen recording. Unauthorized distribution is prohibited.'
+          '⚠️ [SECURITY ALERT] Educational materials from Mrs. Nashwa Abdelhalim Academy are strictly protected. Unauthorized distribution is prohibited.'
         );
       }
-    } catch (err) {
-      // Ignore clipboard access rejection
-    }
+    } catch (err) { /* ignore */ }
 
-    // Inject body class to trigger CSS blackout on mobile
     document.body.classList.add('recording-detected');
     setTimeout(() => document.body.classList.remove('recording-detected'), 2500);
 
     setScreenshotAttempted(true);
-    toast.error('⚠️ Screenshot Attempt Blocked — Screen blanked & clipboard wiped.', {
+    toast.error('⚠️ Screenshot Blocked — Captured image shows security shield, not content.', {
       id: 'screenshot-lockout',
       duration: 4000,
     });
 
-    setTimeout(() => {
-      setScreenshotAttempted(false);
-    }, 2000);
-  }, []);
-
-  // ─── 2. Screen Recording Detection Engine ─────────────────────────
-  const triggerRecordingLockout = useCallback(() => {
-    setIsScreenRecording(true);
-    document.body.classList.add('recording-detected');
-    toast.error('🔴 Screen Recording Detected — Content hidden by security shield.', {
-      id: 'recording-lockout',
-      duration: 6000,
-    });
-  }, []);
-
-  const clearRecordingLockout = useCallback(() => {
-    setIsScreenRecording(false);
-    document.body.classList.remove('recording-detected');
+    setTimeout(() => setScreenshotAttempted(false), 2000);
   }, []);
 
   useEffect(() => {
-    // ─── 3. Keyboard Interception (Desktop) ─────────────────────────
+    // ─── Keyboard Interception (Desktop) ────────────────────────────
     const checkSecurityKeys = (e) => {
-      // PrintScreen
       if (
-        e.key === 'PrintScreen' ||
-        e.keyCode === 44 ||
-        e.code === 'PrintScreen' ||
-        e.key === 'Snapshot'
+        e.key === 'PrintScreen' || e.keyCode === 44 ||
+        e.code === 'PrintScreen' || e.key === 'Snapshot'
       ) {
         e.preventDefault();
         triggerScreenshotLockout();
         return false;
       }
 
-      // Windows Snipping Tool (Win + Shift + S) / Browser (Ctrl + Shift + S)
       if (
         (e.shiftKey && (e.key === 'S' || e.key === 's') && (e.metaKey || e.ctrlKey)) ||
         (e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's'))
@@ -97,107 +134,80 @@ export default function SecurityShield({ children }) {
         return false;
       }
 
-      // macOS Screenshots (Cmd + Shift + 3 / 4 / 5)
       if (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5')) {
         e.preventDefault();
         triggerScreenshotLockout();
         return false;
       }
 
-      // Print Prevention (Ctrl/Cmd + P)
       if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
         e.preventDefault();
-        toast.error('Printing course materials and examinations is strictly disabled.', {
-          id: 'no-print',
-        });
+        toast.error('Printing is strictly disabled.', { id: 'no-print' });
         return false;
       }
 
-      // Save Webpage (Ctrl/Cmd + S)
       if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
-        toast.error('Saving offline copies of this platform is restricted.', { id: 'no-save' });
+        toast.error('Saving offline copies is restricted.', { id: 'no-save' });
         return false;
       }
 
-      // View Source (Ctrl + U)
       if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
         e.preventDefault();
         return false;
       }
 
-      // DevTools (F12, Ctrl + Shift + I/J/C)
       if (
         e.key === 'F12' ||
-        ((e.ctrlKey || e.metaKey) &&
-          e.shiftKey &&
+        ((e.ctrlKey || e.metaKey) && e.shiftKey &&
           (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c'))
       ) {
         e.preventDefault();
-        toast.error('Developer tools inspection is disabled on protected academy pages.', {
-          id: 'no-inspect',
-        });
+        toast.error('Developer tools are disabled.', { id: 'no-inspect' });
         return false;
       }
     };
 
-    // ─── 4. Right-Click / Long-Press Context Menu Blocker ───────────
+    // ─── Context Menu Blocker ───────────────────────────────────────
     const handleContextMenu = (e) => {
-      const tagName = e.target.tagName ? e.target.tagName.toLowerCase() : '';
-      if (tagName === 'input' || tagName === 'textarea') return;
-
+      const tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea') return;
       e.preventDefault();
-      toast('🔒 Protected: Context menu and saving disabled.', {
-        id: 'no-context',
-        icon: '🛡️',
-        style: {
-          background: '#1c1611',
-          color: '#c9a96e',
-          border: '1px solid rgba(201,169,110,0.3)',
-        },
+      toast('🔒 Protected: Context menu disabled.', {
+        id: 'no-context', icon: '🛡️',
+        style: { background: '#1c1611', color: '#c9a96e', border: '1px solid rgba(201,169,110,0.3)' },
       });
       return false;
     };
 
-    // ─── 5. Drag & Drop Blocker ─────────────────────────────────────
+    // ─── Drag & Drop Blocker ────────────────────────────────────────
     const handleDragStart = (e) => {
-      const tagName = e.target.tagName ? e.target.tagName.toLowerCase() : '';
-      if (tagName === 'input' || tagName === 'textarea') return;
+      const tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea') return;
       e.preventDefault();
       return false;
     };
 
-    // ─── 6. Copy & Cut Blocker ──────────────────────────────────────
+    // ─── Copy & Cut Blocker ─────────────────────────────────────────
     const handleCopyCut = (e) => {
-      const tagName = e.target.tagName ? e.target.tagName.toLowerCase() : '';
-      if (tagName === 'input' || tagName === 'textarea') return;
-
+      const tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea') return;
       e.preventDefault();
       if (e.clipboardData) {
-        e.clipboardData.setData(
-          'text/plain',
-          '⚠️ [PROTECTED] Materials from Mrs. Nashwa Abdelhalim Academy are copyrighted. Copying and screenshots are strictly forbidden.'
-        );
+        e.clipboardData.setData('text/plain',
+          '⚠️ [PROTECTED] Materials from Mrs. Nashwa Abdelhalim Academy are copyrighted.');
       }
-      toast.error('Copying text and materials is disabled to protect academic integrity.', {
-        id: 'no-copy',
-      });
+      toast.error('Copying is disabled to protect academic integrity.', { id: 'no-copy' });
       return false;
     };
 
-    // ─── 7. Window Blur / Visibility Detection ──────────────────────
-    //     (Works on ALL platforms — desktop snipping tools, iOS Control Center,
-    //      Android recents, multitask, screen-record apps)
+    // ─── Window Blur / Visibility ───────────────────────────────────
     const handleBlur = () => {
       const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
       if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
 
-      // On mobile, a quick blur+focus cycle is normal (e.g. keyboard popup).
-      // Only trigger if blur persists > 200ms
       if (isMobileOrTablet()) {
-        blurTimeoutRef.current = setTimeout(() => {
-          setIsWindowBlurred(true);
-        }, 200);
+        blurTimeoutRef.current = setTimeout(() => setIsWindowBlurred(true), 200);
       } else {
         setIsWindowBlurred(true);
       }
@@ -212,20 +222,14 @@ export default function SecurityShield({ children }) {
     };
 
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setIsWindowBlurred(true);
-      } else {
-        if (blurTimeoutRef.current) {
-          clearTimeout(blurTimeoutRef.current);
-          blurTimeoutRef.current = null;
-        }
+      if (document.hidden) setIsWindowBlurred(true);
+      else {
+        if (blurTimeoutRef.current) { clearTimeout(blurTimeoutRef.current); blurTimeoutRef.current = null; }
         setIsWindowBlurred(false);
       }
     };
 
-    // ─── 8. iOS Screenshot Detection ────────────────────────────────
-    //     On iOS, pressing Power+Volume triggers a very rapid blur→focus cycle
-    //     (typically < 300ms). We detect this pattern.
+    // ─── iOS Screenshot Detection (blur→focus < 400ms) ──────────────
     let lastBlurTime = 0;
     const iosScreenshotDetector = () => {
       if (!isIOS()) return;
@@ -233,7 +237,6 @@ export default function SecurityShield({ children }) {
       if (document.hidden) {
         lastBlurTime = now;
       } else {
-        // If the page went hidden and came back within 400ms, it's likely a screenshot
         if (lastBlurTime && now - lastBlurTime < 400) {
           triggerScreenshotLockout();
         }
@@ -241,131 +244,75 @@ export default function SecurityShield({ children }) {
       }
     };
 
-    // ─── 9. iOS/Android Multi-Touch Screenshot Gesture Blocker ──────
-    //     iOS: Volume + Power = screenshot. Some Androids: 3-finger swipe.
-    //     We can't block the OS-level gesture, but we blank the screen
-    //     when suspicious multi-touch patterns are detected.
+    // ─── Mobile Touch Gestures ──────────────────────────────────────
     const handleTouchStart = (e) => {
-      // Block long-press (iOS "Save Image" / Android context menu)
       if (e.touches.length === 1) {
-        const tagName = e.target.tagName ? e.target.tagName.toLowerCase() : '';
-        if (tagName === 'img' || tagName === 'video' || tagName === 'canvas') {
-          // Will be cancelled by touchmove/touchend; prevents iOS callout
+        const tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
+        if (tag === 'img' || tag === 'video' || tag === 'canvas') {
           e.target.style.pointerEvents = 'none';
-          setTimeout(() => {
-            if (e.target) e.target.style.pointerEvents = '';
-          }, 100);
+          setTimeout(() => { if (e.target) e.target.style.pointerEvents = ''; }, 100);
         }
       }
+      if (e.touches.length >= 3) triggerScreenshotLockout();
 
-      // Android 3-finger screenshot gesture detection
-      if (e.touches.length >= 3) {
-        triggerScreenshotLockout();
-      }
-
-      // Rapid successive touches (possible screenshot gesture)
       touchTrackRef.current.count++;
       if (touchTrackRef.current.timer) clearTimeout(touchTrackRef.current.timer);
-      touchTrackRef.current.timer = setTimeout(() => {
-        touchTrackRef.current.count = 0;
-      }, 500);
-
-      // If 5+ rapid touches in 500ms — suspicious
+      touchTrackRef.current.timer = setTimeout(() => { touchTrackRef.current.count = 0; }, 500);
       if (touchTrackRef.current.count >= 5) {
         triggerScreenshotLockout();
         touchTrackRef.current.count = 0;
       }
     };
 
-    // ─── 10. iOS Selection / Share Menu Blocker ─────────────────────
+    // ─── Selection Blocker ──────────────────────────────────────────
     const handleSelectionChange = () => {
       const sel = window.getSelection();
       if (sel && sel.toString().length > 0) {
         const anchor = sel.anchorNode;
         if (anchor) {
-          const parentTag = anchor.parentElement
-            ? anchor.parentElement.tagName.toLowerCase()
-            : '';
-          // Allow selection only in inputs and textareas
-          if (parentTag !== 'input' && parentTag !== 'textarea') {
-            sel.removeAllRanges();
-          }
+          const parentTag = anchor.parentElement ? anchor.parentElement.tagName.toLowerCase() : '';
+          if (parentTag !== 'input' && parentTag !== 'textarea') sel.removeAllRanges();
         }
       }
     };
 
-    // ─── 11. Screen Capture API Override ─────────────────────────────
+    // ─── Screen Capture API Override ────────────────────────────────
     let originalGetDisplayMedia = null;
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
         originalGetDisplayMedia = navigator.mediaDevices.getDisplayMedia;
         navigator.mediaDevices.getDisplayMedia = async () => {
           triggerScreenshotLockout();
-          toast.error('Screen recording is strictly blocked by Mrs. Nashwa Academy Security Shield.', {
-            id: 'no-record',
-          });
-          throw new Error('Screen capture disabled by educational security policy.');
+          throw new Error('Screen capture disabled by security policy.');
         };
       }
-    } catch (err) {
-      // Ignore if read-only property
-    }
+    } catch (err) { /* ignore */ }
 
-    // ─── 12. iOS/Android Screen Recording Detection via resize ──────
-    //     On iOS, when screen recording starts the status bar changes and
-    //     sometimes the viewport dimensions shift by a few px. We track that.
-    let lastWidth = window.innerWidth;
-    let lastHeight = window.innerHeight;
-
-    const handleResize = () => {
-      const newW = window.innerWidth;
-      const newH = window.innerHeight;
-
-      // On iOS, screen recording indicator adds ~20px to status bar
-      // triggering a height change without user rotating the device
-      if (
-        isMobileOrTablet() &&
-        Math.abs(newW - lastWidth) === 0 && // width unchanged = no rotation
-        Math.abs(newH - lastHeight) > 0 &&
-        Math.abs(newH - lastHeight) <= 40    // small shift = status bar change
-      ) {
-        // Possible screen recording started
-        triggerScreenshotLockout();
-      }
-
-      lastWidth = newW;
-      lastHeight = newH;
-    };
-
-    // ─── 13. Prevent iOS "Add to Photos" / Share Sheet ──────────────
-    const preventShare = (e) => {
-      if (isMobileOrTablet()) {
-        const tagName = e.target.tagName ? e.target.tagName.toLowerCase() : '';
-        if (tagName === 'img' || tagName === 'video' || tagName === 'canvas') {
-          e.preventDefault();
-          return false;
-        }
-      }
-    };
-
-    // ─── 14. Prevent Android screenshot via power+volume detection ──
-    //     Android Chrome fires a 'keydown' with volume keys right before
-    //     the screenshot combo. We detect rapid volume key events.
+    // ─── Android Volume Key Detection ───────────────────────────────
     let volumeKeyTime = 0;
     const handleAndroidVolumeKeys = (e) => {
       if (!isAndroid()) return;
       if (e.key === 'AudioVolumeDown' || e.key === 'AudioVolumeUp' ||
           e.keyCode === 24 || e.keyCode === 25) {
         const now = Date.now();
-        if (now - volumeKeyTime < 500) {
-          // Rapid volume key presses — likely screenshot combo
-          triggerScreenshotLockout();
-        }
+        if (now - volumeKeyTime < 500) triggerScreenshotLockout();
         volumeKeyTime = now;
       }
     };
 
-    // ═══ Register ALL Event Listeners ═══════════════════════════════
+    // ─── Mobile Resize Detection (iOS recording indicator) ──────────
+    let lastW = window.innerWidth;
+    let lastH = window.innerHeight;
+    const handleResize = () => {
+      const nW = window.innerWidth, nH = window.innerHeight;
+      if (isMobileOrTablet() && Math.abs(nW - lastW) === 0 &&
+          Math.abs(nH - lastH) > 0 && Math.abs(nH - lastH) <= 40) {
+        triggerScreenshotLockout();
+      }
+      lastW = nW; lastH = nH;
+    };
+
+    // ═══ Register Events ════════════════════════════════════════════
     window.addEventListener('keydown', checkSecurityKeys, true);
     window.addEventListener('keyup', checkSecurityKeys, true);
     window.addEventListener('contextmenu', handleContextMenu);
@@ -379,25 +326,14 @@ export default function SecurityShield({ children }) {
     window.addEventListener('resize', handleResize);
     document.addEventListener('selectionchange', handleSelectionChange);
 
-    // Mobile-specific listeners
     if (isMobileOrTablet()) {
       window.addEventListener('touchstart', handleTouchStart, { passive: false });
-      window.addEventListener('touchend', preventShare, { passive: false });
       window.addEventListener('keydown', handleAndroidVolumeKeys, true);
-
-      // Disable pinch-to-zoom (prevents screenshot via zoom trick)
-      const preventZoom = (e) => {
-        if (e.touches && e.touches.length > 1) {
-          e.preventDefault();
-        }
-      };
+      const preventZoom = (e) => { if (e.touches && e.touches.length > 1) e.preventDefault(); };
       document.addEventListener('touchmove', preventZoom, { passive: false });
-
-      // Store ref for cleanup
       window.__securityPreventZoom = preventZoom;
     }
 
-    // ═══ Cleanup ════════════════════════════════════════════════════
     return () => {
       window.removeEventListener('keydown', checkSecurityKeys, true);
       window.removeEventListener('keyup', checkSecurityKeys, true);
@@ -414,49 +350,106 @@ export default function SecurityShield({ children }) {
 
       if (isMobileOrTablet()) {
         window.removeEventListener('touchstart', handleTouchStart);
-        window.removeEventListener('touchend', preventShare);
         window.removeEventListener('keydown', handleAndroidVolumeKeys, true);
         if (window.__securityPreventZoom) {
           document.removeEventListener('touchmove', window.__securityPreventZoom);
           delete window.__securityPreventZoom;
         }
       }
-
       if (originalGetDisplayMedia && navigator.mediaDevices) {
         navigator.mediaDevices.getDisplayMedia = originalGetDisplayMedia;
       }
-
-      if (blurTimeoutRef.current) {
-        clearTimeout(blurTimeoutRef.current);
-      }
+      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
     };
-  }, [triggerScreenshotLockout, triggerRecordingLockout, clearRecordingLockout]);
+  }, [triggerScreenshotLockout]);
 
-  // ─── Meta viewport enforcement (prevent zoom-based screenshot tricks) ─
+  // ─── Meta viewport lock ───────────────────────────────────────────
   useEffect(() => {
     if (isMobileOrTablet()) {
-      let metaViewport = document.querySelector('meta[name="viewport"]');
-      if (!metaViewport) {
-        metaViewport = document.createElement('meta');
-        metaViewport.name = 'viewport';
-        document.head.appendChild(metaViewport);
-      }
-      metaViewport.content =
-        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      let mv = document.querySelector('meta[name="viewport"]');
+      if (!mv) { mv = document.createElement('meta'); mv.name = 'viewport'; document.head.appendChild(mv); }
+      mv.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
     }
   }, []);
 
   const studentIdentifier = user
     ? `${user.full_name || user.username} • ID: ${user.id || 'STU-001'} • ${user.email || 'enrolled'}`
-    : 'STUDENT #2026 • MRS. NASHWA ACADEMY';
+    : 'MRS. NASHWA ACADEMY • PROTECTED';
 
   const isMobile = isMobileOrTablet();
 
   return (
     <div className="relative min-h-screen select-none protected-content">
-      {/* ══ 1. Full-Screen Blackout on Screenshot Attempt ══ */}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          RAF HEARTBEAT SHIELD — ALWAYS ON TOP
+          Default state: OPAQUE BLACK (what screenshots capture)
+          Live state: TRANSPARENT (cleared 60x/sec by requestAnimationFrame)
+          ═══════════════════════════════════════════════════════════════ */}
+      <div
+        ref={shieldOverlayRef}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 99995,
+          backgroundColor: '#000000',
+          opacity: 1,
+          pointerEvents: 'none',
+          willChange: 'opacity',
+          contain: 'strict',
+        }}
+        aria-hidden="true"
+      >
+        {/* This message is what appears in the captured screenshot */}
+        <div
+          ref={shieldMessageRef}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            textAlign: 'center',
+            opacity: 1,
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+          }}
+        >
+          <div style={{
+            width: '72px', height: '72px', borderRadius: '50%',
+            background: 'rgba(220,38,38,0.15)', border: '2px solid rgba(220,38,38,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: '20px',
+          }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <h2 style={{ color: '#ffffff', fontSize: '22px', fontWeight: 'bold', marginBottom: '8px', letterSpacing: '0.5px' }}>
+            ⛔ SCREENSHOT BLOCKED
+          </h2>
+          <p style={{ color: '#fca5a5', fontSize: '13px', maxWidth: '340px', lineHeight: '1.6', marginBottom: '16px' }}>
+            This content is protected by Mrs. Nashwa Abdelhalim Academy Security Shield. Screenshots and screen recordings are strictly prohibited.
+          </p>
+          <div style={{
+            padding: '8px 16px', borderRadius: '12px',
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+            fontSize: '11px', fontFamily: 'monospace', color: '#c9a96e',
+          }}>
+            Session: {studentIdentifier}
+          </div>
+          <div style={{ marginTop: '12px', fontSize: '10px', color: 'rgba(255,100,100,0.5)' }}>
+            📱 Security Shield v4 • Anti-Capture Active
+          </div>
+        </div>
+      </div>
+
+      {/* ══ Manual Lockout Overlay (post-detection alert) ══ */}
       {screenshotAttempted && (
-        <div className="fixed inset-0 z-[99999] bg-black flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-75">
+        <div className="fixed inset-0 z-[99999] bg-black flex flex-col items-center justify-center p-6 text-center">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-950/90 border border-red-500/60 flex items-center justify-center text-red-400 mb-4 sm:mb-6 animate-pulse">
             <ShieldAlert className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
@@ -465,8 +458,8 @@ export default function SecurityShield({ children }) {
           </h2>
           <p className="text-red-300 text-xs sm:text-sm max-w-md leading-relaxed mb-3 sm:mb-4 px-4">
             {isMobile
-              ? 'Screenshot & screen recording are blocked on this device. Your session is logged and content has been hidden.'
-              : 'Screen capture, snipping tool, or recording attempts are strictly blocked. Clipboard has been wiped and your student session is logged.'}
+              ? 'Your screenshot captured the security shield — not the actual content. Your session is logged.'
+              : 'Screen capture blocked. The captured image shows the security shield, not course content.'}
           </p>
           <div className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] sm:text-xs font-mono text-[#c9a96e] max-w-[90vw] truncate">
             Account: {studentIdentifier}
@@ -480,26 +473,8 @@ export default function SecurityShield({ children }) {
         </div>
       )}
 
-      {/* ══ 2. Screen Recording Active Overlay ══ */}
-      {isScreenRecording && !screenshotAttempted && (
-        <div className="fixed inset-0 z-[99998] bg-black flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-16 h-16 rounded-full bg-red-950/80 border-2 border-red-500/50 flex items-center justify-center text-red-400 mb-4 animate-pulse">
-            <div className="w-4 h-4 rounded-full bg-red-500 animate-ping" />
-          </div>
-          <h2 className="text-xl sm:text-2xl font-serif text-white mb-2">
-            Screen Recording Detected
-          </h2>
-          <p className="text-red-300 text-xs sm:text-sm max-w-sm leading-relaxed mb-3">
-            All content is hidden while screen recording is active. Stop recording to resume learning.
-          </p>
-          <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-red-500/20 text-[10px] font-mono text-red-400">
-            Session: {studentIdentifier}
-          </div>
-        </div>
-      )}
-
-      {/* ══ 3. Window Blur / Snipping Tool / App Switch Veil ══ */}
-      {isWindowBlurred && !screenshotAttempted && !isScreenRecording && (
+      {/* ══ Window Blur Veil ══ */}
+      {isWindowBlurred && !screenshotAttempted && (
         <div
           onClick={() => setIsWindowBlurred(false)}
           onTouchEnd={() => setIsWindowBlurred(false)}
@@ -513,23 +488,21 @@ export default function SecurityShield({ children }) {
           </h3>
           <p className="text-xs sm:text-sm text-[#a09787] max-w-sm mb-3 sm:mb-4 leading-relaxed px-4">
             {isMobile
-              ? 'Content is hidden while you are away from this app. Tap here to resume.'
-              : 'Content is hidden while this browser window is inactive or an external tool is capturing the screen.'}
+              ? 'Content is hidden while you are away. Tap here to resume.'
+              : 'Content is hidden while this window is inactive.'}
           </p>
           <div className="text-[10px] sm:text-[11px] font-mono text-[#c9a96e] bg-black/50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-[#c9a96e]/30 shadow-lg">
-            {isMobile ? 'Tap anywhere to resume' : 'Click anywhere inside this window to resume'}
+            {isMobile ? 'Tap anywhere to resume' : 'Click anywhere to resume'}
           </div>
         </div>
       )}
 
-      {/* ══ Page Content (hidden when any protection layer is active) ══ */}
-      <div
-        className={
-          isWindowBlurred || isScreenRecording
-            ? 'filter blur-2xl opacity-0 pointer-events-none transition-all duration-150'
-            : 'transition-all duration-150'
-        }
-      >
+      {/* ══ Page Content ══ */}
+      <div className={
+        isWindowBlurred
+          ? 'filter blur-2xl opacity-0 pointer-events-none transition-all duration-150'
+          : 'transition-all duration-150'
+      }>
         {children}
       </div>
     </div>
