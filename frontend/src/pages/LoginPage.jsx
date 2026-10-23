@@ -402,7 +402,7 @@ export default function LoginPage() {
                 className="mt-3 p-3.5 rounded-xl bg-[#1c1611] border border-[#c9a96e]/20 text-[11px] text-[#a09787] space-y-2.5 font-mono"
               >
                 <div className="text-[10px] text-[#d8cfc4] uppercase font-sans font-bold tracking-wider mb-1">
-                  Type these credentials into the sign-in fields:
+                  Standard Account Credentials:
                 </div>
                 <div className="p-2 rounded-lg bg-[#14100c] border border-white/5 flex items-center justify-between">
                   <span className="text-[#f5f0e8] font-sans font-semibold">Administrator:</span>
@@ -413,7 +413,11 @@ export default function LoginPage() {
                   <span>mrs.nashwa / <span className="text-[#c9a96e]">NashwaEnglish2026!</span></span>
                 </div>
                 <div className="p-2 rounded-lg bg-[#14100c] border border-white/5 flex items-center justify-between">
-                  <span className="text-[#f5f0e8] font-sans font-semibold">Student Account:</span>
+                  <span className="text-[#f5f0e8] font-sans font-semibold">Academic Manager:</span>
+                  <span>manager / <span className="text-[#c9a96e]">Manager2026!</span></span>
+                </div>
+                <div className="p-2 rounded-lg bg-[#14100c] border border-white/5 flex items-center justify-between">
+                  <span className="text-[#f5f0e8] font-sans font-semibold">Scholar (Student):</span>
                   <span>student / <span className="text-[#c9a96e]">Student2026!</span></span>
                 </div>
                 <div className="p-2 rounded-lg bg-[#14100c] border border-white/5 flex items-center justify-between">

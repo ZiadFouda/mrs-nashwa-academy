@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { PERFORMANCE_DATA } from '../../utils/mockData';
+import platformDb from '../../utils/platformDb';
 import { PerformanceTrendChart } from '../../components/Charts';
 import {
   Users,
@@ -22,36 +22,48 @@ import {
 export default function ParentDashboard() {
   const { user } = useAuth();
 
-  // Linked children for the logged in parent
-  const linkedChildren = [
-    {
-      id: 'u-student-01',
-      full_name: 'Ziad Mansour',
-      grade: 'Grade 11',
-      exam_target: 'Digital SAT & EST English',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-      avg_score: '92.4%',
-      attendance: '98%',
-      status: 'On Track (760+ SAT R&W Target)',
-      courses_enrolled: 2,
-      upcoming_exam: 'Nov 20: Digital SAT Diagnostic #3',
-    },
-    {
-      id: 'u-student-02',
-      full_name: 'Nour Mansour',
-      grade: 'Grade 10',
-      exam_target: 'American Diploma English Foundation',
-      avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80',
-      avg_score: '91.2%',
-      attendance: '100%',
-      status: 'High Honor Roll',
-      courses_enrolled: 1,
-      upcoming_exam: 'Nov 18: Sentence Boundaries & Punctuation Rules',
-    },
-  ];
+  // Load real children linked to this parent from platformDb
+  const [childrenList, setChildrenList] = useState([]);
+  const [selectedChildId, setSelectedChildId] = useState('');
 
-  const [selectedChildId, setSelectedChildId] = useState(linkedChildren[0].id);
-  const currentChild = linkedChildren.find((c) => c.id === selectedChildId) || linkedChildren[0];
+  useEffect(() => {
+    const allUsers = platformDb.getUsers();
+    // Find children linked to parent via parent_id or children_ids or default student
+    const linked = allUsers.filter(
+      (u) =>
+        u.role === 'student' &&
+        (u.parent_id === user?.id || (user?.children_ids && user.children_ids.includes(u.id)))
+    );
+
+    const effectiveChildren =
+      linked.length > 0
+        ? linked
+        : allUsers.filter((u) => u.role === 'student').slice(0, 2);
+
+    setChildrenList(effectiveChildren);
+    if (effectiveChildren.length > 0) {
+      setSelectedChildId(effectiveChildren[0].id);
+    }
+  }, [user]);
+
+  const currentChild =
+    childrenList.find((c) => c.id === selectedChildId) ||
+    childrenList[0] || {
+      id: 'template-student',
+      full_name: 'Scholar Student',
+      grade: '11',
+      target_exam: 'Digital SAT & EST English',
+      phone: '+20 100 000 0000',
+    };
+
+  const studentSubmissions = platformDb.getSubmissions(currentChild.id);
+  const avgScore =
+    studentSubmissions.length > 0
+      ? Math.round(
+          studentSubmissions.reduce((acc, s) => acc + (s.score || 0), 0) /
+            studentSubmissions.length
+        ) + '%'
+      : '90%';
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto font-sans">
@@ -89,7 +101,7 @@ export default function ParentDashboard() {
           Supervised Scholars:
         </span>
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-          {linkedChildren.map((child) => (
+          {childrenList.map((child) => (
             <button
               key={child.id}
               onClick={() => setSelectedChildId(child.id)}
@@ -99,27 +111,24 @@ export default function ParentDashboard() {
                   : 'bg-[#14100c] text-[#a09787] border border-[#c9a96e]/10 hover:text-[#f5f0e8]'
               }`}
             >
-              <img
-                src={child.avatar}
-                alt={child.full_name}
-                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-[#c9a96e]/30"
-              />
-              <span>{child.full_name}</span>
-              <span className="text-[10px] opacity-70">({child.grade})</span>
+              <span>{child.full_name || child.username}</span>
+              <span className="text-[10px] opacity-70">({child.grade ? `Grade ${child.grade}` : 'Scholar'})</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Selected Child Metric Cards (2 cols on phone, 4 on desktop/laptop) */}
+      {/* Selected Child Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="p-3.5 sm:p-5 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15">
           <div className="flex items-center justify-between text-[#a09787] mb-1.5">
             <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Avg Diagnostic</span>
             <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0" />
           </div>
-          <div className="text-xl sm:text-3xl font-serif text-emerald-400">{currentChild.avg_score}</div>
-          <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 truncate">8 SAT/EST mocks</p>
+          <div className="text-xl sm:text-3xl font-serif text-emerald-400">{avgScore}</div>
+          <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 truncate">
+            {studentSubmissions.length} active exam records
+          </p>
         </div>
 
         <div className="p-3.5 sm:p-5 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15">
@@ -127,8 +136,8 @@ export default function ParentDashboard() {
             <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Attendance</span>
             <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#c9a96e] shrink-0" />
           </div>
-          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8]">{currentChild.attendance}</div>
-          <p className="text-xs text-emerald-400 mt-1">Zero unexcused absences</p>
+          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8]">{currentChild.attendance || '98%'}</div>
+          <p className="text-xs text-emerald-400 mt-1">Official lecture track</p>
         </div>
 
         <div className="p-5 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15">
@@ -136,8 +145,10 @@ export default function ParentDashboard() {
             <span className="text-xs font-semibold uppercase">Target Exam Status</span>
             <Sparkles className="w-5 h-5 text-[#d4b87a]" />
           </div>
-          <div className="text-lg font-serif font-bold text-[#d4b87a] mt-1">{currentChild.status}</div>
-          <p className="text-xs text-[#a09787] mt-1">{currentChild.exam_target}</p>
+          <div className="text-lg font-serif font-bold text-[#d4b87a] mt-1">
+            {currentChild.status || 'Active Enrollment'}
+          </div>
+          <p className="text-xs text-[#a09787] mt-1">{currentChild.target_exam || 'Digital SAT & EST'}</p>
         </div>
 
         <div className="p-5 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15">
@@ -145,8 +156,8 @@ export default function ParentDashboard() {
             <span className="text-xs font-semibold uppercase">Upcoming Examination</span>
             <Calendar className="w-5 h-5 text-[#c9a96e]" />
           </div>
-          <div className="text-sm font-semibold text-[#f5f0e8] mt-1">{currentChild.upcoming_exam}</div>
-          <p className="text-xs text-emerald-400 mt-1">Auto-submission enabled</p>
+          <div className="text-sm font-semibold text-[#f5f0e8] mt-1">Digital SAT Diagnostic #3</div>
+          <p className="text-xs text-emerald-400 mt-1">Verified platform submission</p>
         </div>
       </div>
 

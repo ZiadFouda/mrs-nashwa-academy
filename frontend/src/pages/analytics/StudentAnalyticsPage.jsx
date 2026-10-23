@@ -41,7 +41,7 @@ export default function StudentAnalyticsPage() {
               SAT & EST English Performance Trajectory
             </h1>
             <p className="text-[#a09787] text-xs sm:text-sm mt-1">
-              Scholar: <strong className="text-[#c9a96e]">{user?.full_name || 'Ziad Mansour'}</strong> • Grade {user?.grade || '11'}
+              Scholar: <strong className="text-[#c9a96e]">{user?.full_name || user?.username || 'Enrolled Student'}</strong> • Grade {user?.grade || '11'}
             </p>
           </div>
 
