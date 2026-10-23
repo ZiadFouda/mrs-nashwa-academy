@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
@@ -80,7 +80,7 @@ export default function App() {
           }}
         />
 
-        <BrowserRouter>
+        <Router>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
@@ -263,7 +263,7 @@ export default function App() {
             {/* 404 Route */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
-        </BrowserRouter>
+        </Router>
       </AuthProvider>
     </HelmetProvider>
   );
