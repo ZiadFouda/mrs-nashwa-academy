@@ -25,6 +25,9 @@ function initDatabase() {
         last_login TEXT,
         login_attempts INTEGER DEFAULT 0,
         locked_until TEXT,
+        bound_device_id TEXT,
+        bound_device_label TEXT,
+        device_lock_enabled INTEGER DEFAULT 1,
         FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE SET NULL
       );
       CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -264,6 +267,22 @@ function initDatabase() {
 
   schemaTx();
   console.log('Tables and indexes created successfully.');
+
+  // Safe migrations for existing databases
+  try {
+    const userColumns = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
+    if (!userColumns.includes('bound_device_id')) {
+      db.exec('ALTER TABLE users ADD COLUMN bound_device_id TEXT;');
+    }
+    if (!userColumns.includes('bound_device_label')) {
+      db.exec('ALTER TABLE users ADD COLUMN bound_device_label TEXT;');
+    }
+    if (!userColumns.includes('device_lock_enabled')) {
+      db.exec('ALTER TABLE users ADD COLUMN device_lock_enabled INTEGER DEFAULT 1;');
+    }
+  } catch (migErr) {
+    console.warn('Migration note:', migErr.message);
+  }
 
   // Seed default admin and teacher accounts
   seedDefaultAccounts();

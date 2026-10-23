@@ -33,8 +33,8 @@ if (ENABLE_CLUSTER && cluster.isPrimary) {
     console.warn(`[Worker ${worker.process.pid}] died (code: ${code}, signal: ${signal}). Spawning replacement...`);
     cluster.fork();
   });
-} else {
-  // Worker process or single-instance mode
+} else if (require.main === module) {
+  // Worker process or single-instance mode (only run directly if not imported as module)
   startServer();
 }
 

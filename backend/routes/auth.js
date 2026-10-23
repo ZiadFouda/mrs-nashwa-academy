@@ -33,7 +33,7 @@ router.post(
   ],
   (req, res) => {
     try {
-      const { username, password } = req.body;
+      const { username, password, currentDevice } = req.body;
       const clientIp = req.ip || req.connection.remoteAddress;
       const userAgent = req.headers['user-agent'] || 'Unknown';
 
@@ -86,6 +86,29 @@ router.post(
           success: false,
           message: `Invalid credentials. ${remaining > 0 ? remaining + ' attempt(s) remaining before account lockout.' : ''}`
         });
+      }
+
+      // Single-Device Enforcement for students
+      if (user.role === 'student' && user.device_lock_enabled) {
+        if (currentDevice && currentDevice.deviceId) {
+          if (!user.bound_device_id) {
+            // First login: permanently bind device
+            db.prepare('UPDATE users SET bound_device_id = ?, bound_device_label = ? WHERE id = ?')
+              .run(currentDevice.deviceId, currentDevice.deviceLabel || 'Registered Browser', user.id);
+            logAudit(user.id, 'DEVICE_BOUND_ON_FIRST_LOGIN', { deviceId: currentDevice.deviceId, label: currentDevice.deviceLabel }, clientIp);
+          } else if (user.bound_device_id !== currentDevice.deviceId) {
+            // Mismatched device attempt
+            logAudit(user.id, 'DEVICE_MISMATCH_BLOCKED', {
+              attemptedDevice: currentDevice.deviceId,
+              boundDevice: user.bound_device_id
+            }, clientIp);
+            return res.status(403).json({
+              success: false,
+              code: 'DEVICE_LOCK_ERROR',
+              message: `DEVICE_LOCK_ERROR: This student account is bound to an authorized device (${user.bound_device_label || user.bound_device_id}). To authorize this new device, contact the Academy Manager.`
+            });
+          }
+        }
       }
 
       // Successful login: reset attempts and update last_login

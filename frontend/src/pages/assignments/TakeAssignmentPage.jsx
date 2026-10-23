@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import platformDb from '../../utils/platformDb';
 import { useAuth } from '../../contexts/AuthContext';
 import Timer from '../../components/Timer';
+import DynamicWatermark from '../../components/DynamicWatermark';
 import {
   Clock,
   AlertTriangle,
@@ -132,7 +133,9 @@ export default function TakeAssignmentPage() {
   const answeredCount = Object.keys(answers).length;
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-6xl mx-auto select-none protected-content font-sans">
+    <div className="relative space-y-4 sm:space-y-6 max-w-6xl mx-auto select-none protected-content font-sans">
+      {/* Dynamic Watermark for High-Stakes Exam Questions */}
+      <DynamicWatermark opacity={0.11} />
       {/* Top Testing Header Bar */}
       <div className="p-3 sm:p-5 rounded-2xl bg-[#14100c]/95 border border-[#c9a96e]/20 shadow-xl backdrop-blur-xl flex items-center justify-between gap-3 sticky top-16 z-30">
         <div className="min-w-0">

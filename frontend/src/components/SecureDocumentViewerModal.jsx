@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import DynamicWatermark from './DynamicWatermark';
 import {
   ShieldCheck,
   X,
@@ -109,13 +110,7 @@ export default function SecureDocumentViewerModal({ document: doc, onClose }) {
         className="w-full max-w-4xl max-h-[90vh] rounded-3xl bg-[#14100c] border border-[#c9a96e]/30 shadow-2xl flex flex-col overflow-hidden relative"
       >
         {/* Dynamic Watermark Stamp on top of document */}
-        <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center overflow-hidden opacity-[0.06]">
-          <div className="transform -rotate-25 text-3xl sm:text-5xl font-mono font-black text-white text-center leading-relaxed">
-            {studentWatermark}
-            <br />
-            CONFIDENTIAL • IN-APP PREVIEW ONLY
-          </div>
-        </div>
+        <DynamicWatermark opacity={0.14} />
 
         {/* Modal Top Bar */}
         <div className="p-4 sm:p-5 border-b border-[#c9a96e]/20 bg-[#1c1611]/90 flex items-center justify-between gap-3 shrink-0">

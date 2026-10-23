@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Play, Pause, Volume2, VolumeX, Maximize, Shield, AlertCircle } from 'lucide-react';
+import DynamicWatermark from './DynamicWatermark';
 
 export default function VideoPlayer({
   src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
@@ -145,16 +146,19 @@ export default function VideoPlayer({
         onContextMenu={(e) => e.preventDefault()}
       />
 
-      {/* Security Watermark Floating Overlay */}
+      {/* Floating Dynamic Watermark Matrix */}
+      <DynamicWatermark opacity={0.18} />
+
+      {/* Primary Moving Focus Badge */}
       <div
-        className="absolute pointer-events-none z-20 flex flex-col items-center gap-0.5 text-center transition-all duration-1000 ease-in-out opacity-25 hover:opacity-40"
+        className="absolute pointer-events-none z-30 flex flex-col items-center gap-0.5 text-center transition-all duration-1000 ease-in-out opacity-40 hover:opacity-60"
         style={{ top: watermarkPos.top, left: watermarkPos.left }}
       >
-        <div className="text-[11px] font-mono font-bold text-white/70 tracking-widest uppercase bg-black/40 px-2 py-0.5 rounded border border-white/10 backdrop-blur-xs">
+        <div className="text-[10px] font-mono font-bold text-white/90 tracking-widest uppercase bg-black/60 px-2 py-0.5 rounded border border-white/20 backdrop-blur-xs">
           {studentWatermarkText}
         </div>
-        <div className="text-[9px] text-amber-300/80 font-mono">
-          MRS. NASHWA ABDELHALIM - CONFIDENTIAL LECTURE
+        <div className="text-[8px] text-amber-300 font-mono tracking-wider">
+          MRS. NASHWA ACADEMY • WATERMARKED STREAM
         </div>
       </div>
 

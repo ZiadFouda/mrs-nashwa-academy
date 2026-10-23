@@ -568,4 +568,57 @@ router.post('/system-restart', requireRole('admin'), (req, res) => {
   }
 });
 
+/**
+ * POST /api/admin/reset-device/:studentId
+ * Resets a student's bound device (Admin or Manager)
+ */
+router.post('/reset-device/:studentId', (req, res) => {
+  try {
+    const studentId = req.params.studentId;
+    const student = db.prepare('SELECT id, username, full_name, bound_device_id, bound_device_label FROM users WHERE id = ?').get(studentId);
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student not found.' });
+    }
+
+    db.prepare('UPDATE users SET bound_device_id = NULL, bound_device_label = NULL WHERE id = ?').run(studentId);
+    logAudit(req.user.id, 'STUDENT_DEVICE_RESET', { studentId, studentUsername: student.username }, req.ip);
+
+    return res.status(200).json({
+      success: true,
+      message: `Device lock for ${student.full_name || student.username} has been reset. They may now register a new device.`
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Failed to reset device lock: ' + err.message });
+  }
+});
+
+/**
+ * POST /api/admin/toggle-device-lock/:studentId
+ * Enable or disable single device lock requirement for a specific student
+ */
+router.post('/toggle-device-lock/:studentId', (req, res) => {
+  try {
+    const studentId = req.params.studentId;
+    const { enabled } = req.body;
+    const student = db.prepare('SELECT id, username, device_lock_enabled FROM users WHERE id = ?').get(studentId);
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student not found.' });
+    }
+
+    const newStatus = enabled !== undefined ? (enabled ? 1 : 0) : (student.device_lock_enabled ? 0 : 1);
+    db.prepare('UPDATE users SET device_lock_enabled = ? WHERE id = ?').run(newStatus, studentId);
+    logAudit(req.user.id, 'STUDENT_DEVICE_LOCK_TOGGLED', { studentId, enabled: !!newStatus }, req.ip);
+
+    return res.status(200).json({
+      success: true,
+      message: `Device lock for ${student.username} is now ${newStatus ? 'ENABLED' : 'DISABLED'}.`,
+      device_lock_enabled: !!newStatus
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Failed to toggle device lock: ' + err.message });
+  }
+});
+
 module.exports = router;
