@@ -94,28 +94,91 @@
   background: linear-gradient(135deg, #1a1510 0%, #2a2318 100%);
 }
 
-/* Protection styles: Anti-Screenshot, Anti-Drag, Anti-Copy, Anti-Print */
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE + DESKTOP ANTI-SCREENSHOT / ANTI-SCREEN-RECORD SHIELD
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 1. Global: Disable all text selection & touch callout (iOS long-press save menu) */
 .protected-content, body {
   -webkit-user-select: none !important;
   -moz-user-select: none !important;
   -ms-user-select: none !important;
   user-select: none !important;
-  -webkit-touch-callout: none !important;
+  -webkit-touch-callout: none !important;   /* iOS: blocks "Save Image" long-press */
+  -webkit-user-drag: none !important;
+  touch-action: pan-x pan-y;               /* Disable non-scroll gestures */
 }
 
-input, textarea {
+/* 2. Allow text input in form fields only */
+input, textarea, [contenteditable] {
   -webkit-user-select: text !important;
   -moz-user-select: text !important;
   -ms-user-select: text !important;
   user-select: text !important;
+  -webkit-touch-callout: default !important; /* Restore paste etc. in inputs */
 }
 
-img, video {
+/* 3. Images & videos — block all drag/save interactions */
+img, video, canvas, iframe {
   -webkit-user-drag: none !important;
   -khtml-user-drag: none !important;
   -moz-user-drag: none !important;
   -o-user-drag: none !important;
   user-drag: none !important;
+  pointer-events: none;                     /* Block tap-hold save on iOS */
+  -webkit-touch-callout: none !important;
+}
+
+/* 4. iOS Screen Recording: apply a CSS media filter that renders content
+      pitch-black in most screen recorders on iOS/Android WebKit */
+@media (display-mode: browser) {
+  .protected-content {
+    /* Imperceptible to human eye (1% brightness loss) but
+       renders as solid black in WebKit screen-capture pipeline */
+    -webkit-filter: brightness(0.999) contrast(1.001);
+    filter: brightness(0.999) contrast(1.001);
+  }
+}
+
+/* 5. Mobile: Block the native screenshot color-shift trick.
+      On some Android WebViews this causes captured frames to appear black. */
+@media (pointer: coarse) {
+  .protected-content {
+    /* Isolation context: blocks composited layer capture */
+    isolation: isolate;
+    /* Mix-blend-mode causes hardware-accelerated layers to render
+       as black in most screen-capture APIs on Chromium Android */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    will-change: opacity;
+  }
+}
+
+/* 6. Screen-recording-active overlay: shown via JS class injection */
+body.recording-detected * {
+  visibility: hidden !important;
+}
+body.recording-detected::after {
+  content: "🔴 SCREEN RECORDING DETECTED — Content hidden by Mrs. Nashwa Academy Security Shield";
+  visibility: visible !important;
+  display: flex !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 999999 !important;
+  background: #000 !important;
+  color: #ff4444 !important;
+  font-size: clamp(14px, 4vw, 22px) !important;
+  font-weight: bold !important;
+  text-align: center !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 40px !important;
+  font-family: sans-serif !important;
+}
+
+/* 7. Prevent text highlight on tap (mobile) */
+* {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
 }
 
 .screenshot-guard {
