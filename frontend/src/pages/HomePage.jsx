@@ -352,7 +352,7 @@ export default function HomePage() {
               Sign In to Your Dashboard
             </Link>
             <a
-              href="https://wa.me/201000000000"
+              href="https://wa.me/201030924286"
               target="_blank"
               rel="noreferrer"
               className="w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 text-[#f5f0e8] font-semibold text-xs sm:text-sm border border-[#c9a96e]/25 transition flex items-center justify-center gap-2"

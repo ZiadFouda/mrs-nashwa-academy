@@ -37,7 +37,7 @@ export const DEFAULT_SITE_SETTINGS = {
   announcement_text: '🚨 Official Digital SAT & EST Diagnostic Exams are now live. Note: Accounts are bound to 1 authorized device.',
   announcement_badge: 'ACADEMY NOTICE',
   announcement_style: 'gold', // 'gold' | 'red' | 'emerald'
-  whatsapp_number: '+201000000000',
+  whatsapp_number: '+20 1030924286',
   zoom_url: 'https://zoom.us',
   support_email: 'support@nashwa-academy.com',
   homepage_hero_title: 'Master the Digital SAT & EST English with Distinction',

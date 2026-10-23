@@ -235,7 +235,7 @@ export default function LoginPage() {
                   <span>Remember this device</span>
                 </label>
                 <a
-                  href="https://wa.me/201000000000"
+                  href="https://wa.me/201030924286"
                   target="_blank"
                   rel="noreferrer"
                   className="text-[#c9a96e] hover:text-[#d4b87a] font-medium transition"
