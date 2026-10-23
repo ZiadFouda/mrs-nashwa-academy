@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import VideoPlayer from '../../components/VideoPlayer';
 import SecureDocumentViewerModal from '../../components/SecureDocumentViewerModal';
-import { LESSONS, COURSES } from '../../utils/mockData';
+import platformDb from '../../utils/platformDb';
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,10 +22,10 @@ export default function LessonPage() {
   const navigate = useNavigate();
 
   const [selectedPreviewDoc, setSelectedPreviewDoc] = useState(null);
-  const [lessonsList, setLessonsList] = useState(LESSONS);
+  const [lessonsList, setLessonsList] = useState(() => platformDb.getLessons());
   const currentLessonIndex = lessonsList.findIndex((l) => l.id === id);
   const lesson = lessonsList[currentLessonIndex] || lessonsList[0];
-  const course = COURSES.find((c) => c.id === lesson.course_id) || COURSES[0];
+  const course = platformDb.getCourseById(lesson?.course_id) || platformDb.getCourses()[0];
 
   const prevLesson = currentLessonIndex > 0 ? lessonsList[currentLessonIndex - 1] : null;
   const nextLesson =

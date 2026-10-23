@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { COURSES } from '../../utils/mockData';
+import platformDb from '../../utils/platformDb';
 import {
   BookOpen,
   Plus,
@@ -16,9 +16,13 @@ import {
 import toast from 'react-hot-toast';
 
 export default function CourseManagementPage() {
-  const [courses, setCourses] = useState(COURSES);
+  const [courses, setCourses] = useState(() => platformDb.getCourses());
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
+
+  const refreshCourses = () => {
+    setCourses(platformDb.getCourses());
+  };
 
   const [formData, setFormData] = useState({
     title: '',
@@ -65,30 +69,32 @@ export default function CourseManagementPage() {
       return;
     }
 
-    if (editingCourse) {
-      setCourses((prev) =>
-        prev.map((c) => (c.id === editingCourse.id ? { ...c, ...formData } : c))
-      );
-      toast.success('Course updated successfully!');
-    } else {
-      const newCourse = {
-        ...formData,
-        id: `c-custom-${Date.now()}`,
-        enrolled_count: 0,
-        rating: 5.0,
-        progress: 0,
-        status: 'Available',
-      };
-      setCourses([newCourse, ...courses]);
-      toast.success('New course added to academy catalog!');
+    try {
+      if (editingCourse) {
+        platformDb.saveCourse({ ...editingCourse, ...formData });
+        toast.success('Course updated in platform database!');
+      } else {
+        platformDb.saveCourse({
+          ...formData,
+          enrolled_count: 0,
+          rating: 5.0,
+          progress: 0,
+          status: 'Available',
+        });
+        toast.success('New course added and published to scholars!');
+      }
+      refreshCourses();
+      setShowModal(false);
+    } catch (err) {
+      toast.error(err.message || 'Failed to save course');
     }
-    setShowModal(false);
   };
 
   const handleDeleteCourse = (id) => {
-    if (confirm('Are you sure you want to remove this course from catalog?')) {
-      setCourses((prev) => prev.filter((c) => c.id !== id));
-      toast.success('Course deleted.');
+    if (window.confirm('Are you sure you want to remove this course from catalog?')) {
+      platformDb.deleteCourse(id);
+      refreshCourses();
+      toast.success('Course removed.');
     }
   };
 

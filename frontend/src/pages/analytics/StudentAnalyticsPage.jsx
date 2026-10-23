@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   PerformanceTrendChart,
   SubjectBreakdownChart,
   SkillRadarChart,
 } from '../../components/Charts';
-import { PERFORMANCE_DATA, SKILL_RADAR_DATA, ASSIGNMENTS } from '../../utils/mockData';
+import { PERFORMANCE_DATA, SKILL_RADAR_DATA } from '../../utils/mockData';
+import platformDb from '../../utils/platformDb';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   BarChart3,
@@ -20,6 +21,11 @@ import {
 
 export default function StudentAnalyticsPage() {
   const { user } = useAuth();
+  const [assignments, setAssignments] = useState(() => platformDb.getAssignments());
+
+  useEffect(() => {
+    setAssignments(platformDb.getAssignments());
+  }, []);
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto font-sans">
@@ -166,7 +172,7 @@ export default function StudentAnalyticsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#c9a96e]/10">
-              {ASSIGNMENTS.map((asg) => (
+              {assignments.map((asg) => (
                 <tr key={asg.id} className="hover:bg-white/5 transition">
                   <td className="py-3.5 px-4 font-semibold text-[#f5f0e8]">{asg.title}</td>
                   <td className="py-3.5 px-4">{asg.type}</td>

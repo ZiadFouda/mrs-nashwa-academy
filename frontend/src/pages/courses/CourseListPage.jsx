@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { COURSES } from '../../utils/mockData';
+import platformDb from '../../utils/platformDb';
 import {
   BookOpen,
   Filter,
@@ -14,10 +14,15 @@ import {
 } from 'lucide-react';
 
 export default function CourseListPage() {
+  const [courses, setCourses] = useState(() => platformDb.getCourses());
   const [gradeFilter, setGradeFilter] = useState('all');
   const [examFilter, setExamFilter] = useState('all');
 
-  const filteredCourses = COURSES.filter((c) => {
+  useEffect(() => {
+    setCourses(platformDb.getCourses());
+  }, []);
+
+  const filteredCourses = courses.filter((c) => {
     const matchesGrade = gradeFilter === 'all' || c.grade === gradeFilter;
     const matchesExam =
       examFilter === 'all' ||

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ASSIGNMENTS } from '../../utils/mockData';
+import platformDb from '../../utils/platformDb';
 import {
   FileCheck2,
   Clock,
@@ -16,11 +16,16 @@ import {
 import toast from 'react-hot-toast';
 
 export default function AssignmentListPage() {
+  const [assignments, setAssignments] = useState(() => platformDb.getAssignments());
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const filteredAssignments = ASSIGNMENTS.filter((asg) => {
+  useEffect(() => {
+    setAssignments(platformDb.getAssignments());
+  }, []);
+
+  const filteredAssignments = assignments.filter((asg) => {
     if (statusFilter === 'all') return true;
-    return asg.status.toLowerCase().replace(/\s+/g, '_') === statusFilter;
+    return (asg.status || '').toLowerCase().replace(/\s+/g, '_') === statusFilter;
   });
 
   return (

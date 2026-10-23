@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ASSIGNMENT_QUESTIONS, COURSES } from '../../utils/mockData';
+import platformDb from '../../utils/platformDb';
 import {
   PlusCircle,
   Clock,
@@ -18,10 +18,11 @@ import toast from 'react-hot-toast';
 
 export default function CreateAssignmentPage() {
   const navigate = useNavigate();
+  const availableCourses = platformDb.getCourses();
 
   const [assignmentMeta, setAssignmentMeta] = useState({
     title: '',
-    course_id: COURSES[0].id,
+    course_id: availableCourses[0]?.id || 'c-sat-rw-11',
     grade: '11',
     exam_type: 'Digital SAT',
     time_limit_minutes: 30,
@@ -31,7 +32,7 @@ export default function CreateAssignmentPage() {
     description: '',
   });
 
-  const [questions, setQuestions] = useState(ASSIGNMENT_QUESTIONS.slice(0, 3));
+  const [questions, setQuestions] = useState(() => platformDb.getQuestions().slice(0, 3));
   const [showPreview, setShowPreview] = useState(false);
 
   // New question draft
@@ -109,8 +110,21 @@ export default function CreateAssignmentPage() {
       return;
     }
 
-    toast.success('Assignment created & published for scholars!');
-    navigate('/assignments');
+    try {
+      const savedId = platformDb.saveAssignment({
+        ...assignmentMeta,
+        type: assignmentMeta.exam_type === 'Digital SAT' ? 'SAT Timed Drill' : 'EST Literacy Exam',
+        total_questions: questions.length,
+        due_date: new Date(Date.now() + 7 * 86400000).toISOString(),
+        status: 'Active',
+        questions: questions,
+      });
+
+      toast.success('Assignment created & published in database!');
+      navigate('/assignments');
+    } catch (err) {
+      toast.error(err.message || 'Failed to publish assignment');
+    }
   };
 
   return (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ENROLLMENTS, COURSES, INITIAL_STUDENTS_LIST } from '../../utils/mockData';
+import platformDb from '../../utils/platformDb';
 import {
   CreditCard,
   CheckCircle2,
@@ -17,16 +17,22 @@ import {
 import toast from 'react-hot-toast';
 
 export default function EnrollmentPage() {
-  const [enrollments, setEnrollments] = useState(ENROLLMENTS);
+  const allUsers = platformDb.getUsers();
+  const allCourses = platformDb.getCourses();
+  const [enrollments, setEnrollments] = useState(() => platformDb.getEnrollments());
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [showManualEnrollModal, setShowManualEnrollModal] = useState(false);
 
+  const refreshEnrollments = () => {
+    setEnrollments(platformDb.getEnrollments());
+  };
+
   const [enrollForm, setEnrollForm] = useState({
-    student_name: INITIAL_STUDENTS_LIST[0].full_name,
-    student_email: INITIAL_STUDENTS_LIST[0].email,
-    course_name: COURSES[0].title,
+    student_name: allUsers[0]?.full_name || 'Scholar',
+    student_email: allUsers[0]?.email || 'student@school.eg',
+    course_name: allCourses[0]?.title || 'Digital SAT English',
     grade: 'Grade 11',
     plan: 'Monthly Subscription',
     amount: '1,800 EGP',
@@ -36,24 +42,16 @@ export default function EnrollmentPage() {
 
   const filteredEnrollments = enrollments.filter((enr) => {
     const matchesSearch =
-      enr.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enr.course_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enr.instapay_ref.toLowerCase().includes(searchTerm.toLowerCase());
+      (enr.student_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (enr.course_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (enr.instapay_ref || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || enr.payment_status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const handleVerifyPayment = (id, approved = true) => {
-    setEnrollments((prev) =>
-      prev.map((e) =>
-        e.id === id
-          ? {
-              ...e,
-              payment_status: approved ? 'Verified' : 'Rejected',
-            }
-          : e
-      )
-    );
+    platformDb.updateEnrollment(id, { payment_status: approved ? 'Verified' : 'Rejected' });
+    refreshEnrollments();
     if (approved) {
       toast.success('Payment verified! Scholar course access unlocked.');
     } else {
@@ -64,16 +62,15 @@ export default function EnrollmentPage() {
 
   const handleManualEnroll = (e) => {
     e.preventDefault();
-    const newEnr = {
-      id: `enr-${Date.now().toString().slice(-4)}`,
+    platformDb.saveEnrollment({
       ...enrollForm,
       payment_status: 'Verified',
       enrolled_at: new Date().toISOString().split('T')[0],
       expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    };
-    setEnrollments([newEnr, ...enrollments]);
+    });
+    refreshEnrollments();
     setShowManualEnrollModal(false);
-    toast.success('Student enrolled and active.');
+    toast.success('Student enrolled and active in database.');
   };
 
   return (

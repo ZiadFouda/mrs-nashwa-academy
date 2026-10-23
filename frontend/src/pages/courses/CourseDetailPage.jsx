@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { COURSES, LESSONS, ASSIGNMENTS } from '../../utils/mockData';
+import platformDb from '../../utils/platformDb';
 import SecureDocumentViewerModal from '../../components/SecureDocumentViewerModal';
 import {
   BookOpen,
@@ -24,11 +24,9 @@ export default function CourseDetailPage() {
   const [activeTab, setActiveTab] = useState('lessons'); // 'lessons' | 'assignments' | 'materials'
   const [selectedPreviewDoc, setSelectedPreviewDoc] = useState(null);
 
-  const course = COURSES.find((c) => c.id === id) || COURSES[0];
-  const courseLessons = LESSONS.filter((l) => l.course_id === course.id || l.course_id === 'c-sat-rw-11');
-  const courseAssignments = ASSIGNMENTS.filter(
-    (a) => a.course_id === course.id || a.course_id === 'c-sat-rw-11'
-  );
+  const course = platformDb.getCourseById(id) || platformDb.getCourses()[0];
+  const courseLessons = platformDb.getLessons(course?.id);
+  const courseAssignments = platformDb.getAssignments(course?.id);
 
   return (
     <div className="space-y-8 font-sans">

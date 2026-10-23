@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ASSIGNMENT_QUESTIONS, ASSIGNMENTS } from '../../utils/mockData';
+import platformDb from '../../utils/platformDb';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Trophy,
   CheckCircle2,
@@ -16,22 +17,35 @@ import {
 
 export default function AssignmentResultPage() {
   const { id } = useParams();
-  const assignment = ASSIGNMENTS.find((a) => a.id === id) || ASSIGNMENTS[0];
-  const questions = ASSIGNMENT_QUESTIONS;
+  const { user } = useAuth();
+
+  const assignment = platformDb.getAssignmentById(id) || platformDb.getAssignments()[0];
+  const rawQuestions = platformDb.getQuestions(assignment?.id);
+  const submission = platformDb.getSubmission(assignment?.id, user?.id) || platformDb.getSubmissions()[0];
+
+  // Map student answers into questions display
+  const questions = rawQuestions.map((q) => ({
+    ...q,
+    student_answer: submission?.answers?.[q.id] || q.student_answer || null,
+  }));
 
   const totalQuestions = questions.length;
-  // Calculate correct based on mock data
-  const correctCount = questions.filter(
-    (q) =>
-      q.student_answer &&
-      (q.type === 'fill_in_blank'
-        ? q.student_answer.trim().toLowerCase() === q.correct_text.trim().toLowerCase()
-        : q.student_answer === q.correct_option)
-  ).length;
+  const correctCount = submission?.correct_count !== undefined
+    ? submission.correct_count
+    : questions.filter(
+        (q) =>
+          q.student_answer &&
+          (q.type === 'fill_in_blank'
+            ? q.student_answer.trim().toLowerCase() === (q.correct_text || '').trim().toLowerCase()
+            : q.student_answer === q.correct_option)
+      ).length;
 
-  const incorrectCount = totalQuestions - correctCount;
-  const scorePercent = Math.round((correctCount / totalQuestions) * 100);
-  const estimatedSatScore = 580 + Math.round((scorePercent / 100) * 220); // 580 to 800
+  const incorrectCount = Math.max(0, totalQuestions - correctCount);
+  const scorePercent = submission?.score !== undefined
+    ? submission.score
+    : Math.round((correctCount / (totalQuestions || 1)) * 100);
+  const estimatedSatScore =
+    submission?.sat_curve_score || (580 + Math.round((scorePercent / 100) * 220));
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto font-sans">

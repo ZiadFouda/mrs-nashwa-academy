@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { INITIAL_STUDENTS_LIST } from '../../utils/mockData';
+import React, { useState, useEffect } from 'react';
+import platformDb from '../../utils/platformDb';
 import {
   Users,
   UserPlus,
@@ -8,6 +8,7 @@ import {
   CheckCircle,
   XCircle,
   Edit2,
+  Trash2,
   Copy,
   Check,
   Shield,
@@ -19,7 +20,7 @@ import {
 import toast from 'react-hot-toast';
 
 export default function UserManagementPage() {
-  const [users, setUsers] = useState(INITIAL_STUDENTS_LIST);
+  const [users, setUsers] = useState(() => platformDb.getUsers());
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [gradeFilter, setGradeFilter] = useState('all');
@@ -35,7 +36,7 @@ export default function UserManagementPage() {
   // Form states for Create User
   const [formData, setFormData] = useState({
     username: '',
-    password: 'password123',
+    password: 'Student2026!',
     full_name: '',
     email: '',
     role: 'student',
@@ -50,24 +51,36 @@ export default function UserManagementPage() {
     'ahmed_hassan,Ahmed Hassan,ahmed@school.eg,11,+201011112233\nmariam_saad,Mariam Saad,mariam@school.eg,10,+201022223344'
   );
 
+  const refreshUsers = () => {
+    setUsers(platformDb.getUsers());
+  };
+
   // Filtered users
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
-      u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (u.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (u.username || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (u.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || u.role === roleFilter;
     const matchesGrade = gradeFilter === 'all' || u.grade === gradeFilter;
     return matchesSearch && matchesRole && matchesGrade;
   });
 
   const handleToggleStatus = (id) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u
-      )
-    );
-    toast.success('User status updated.');
+    const target = users.find((u) => u.id === id);
+    if (!target) return;
+    const newStatus = target.status === 'active' ? 'inactive' : 'active';
+    platformDb.updateUser(id, { status: newStatus });
+    refreshUsers();
+    toast.success(`User status updated to ${newStatus}.`);
+  };
+
+  const handleDeleteUser = (id, username) => {
+    if (window.confirm(`Are you sure you want to permanently delete user "${username}"?`)) {
+      platformDb.deleteUser(id);
+      refreshUsers();
+      toast.success(`User "${username}" deleted.`);
+    }
   };
 
   const handleCreateUser = (e) => {
@@ -77,31 +90,31 @@ export default function UserManagementPage() {
       return;
     }
 
-    const newUser = {
-      id: `u-student-0${users.length + 1}`,
-      username: formData.username.toLowerCase().replace(/\s+/g, '_'),
-      full_name: formData.full_name,
-      email: formData.email || `${formData.username}@student.edu.eg`,
-      role: formData.role,
-      grade: formData.grade,
-      status: 'active',
-      phone: formData.phone || '+20 100 000 0000',
-      parent_name: formData.parent_name || 'Dr. Parent',
-      parent_phone: formData.parent_phone || '+20 100 111 2222',
-      target_exam: 'Digital SAT',
-      avg_score: 85,
-      attendance: '100%',
-      joined_date: new Date().toISOString().split('T')[0],
-    };
+    try {
+      const created = platformDb.addUser({
+        username: formData.username.toLowerCase().replace(/\s+/g, '_'),
+        password: formData.password || 'Student2026!',
+        full_name: formData.full_name,
+        email: formData.email || `${formData.username}@student.edu.eg`,
+        role: formData.role,
+        grade: formData.grade,
+        phone: formData.phone || '+20 100 000 0000',
+        parent_name: formData.parent_name || 'Guardian',
+        parent_phone: formData.parent_phone || '+20 100 111 2222',
+        target_exam: 'Digital SAT & EST English',
+      });
 
-    setUsers([newUser, ...users]);
-    setGeneratedCreds({
-      username: newUser.username,
-      password: formData.password || 'password123',
-      name: newUser.full_name,
-    });
-    setShowCreateModal(false);
-    toast.success('User created successfully!');
+      refreshUsers();
+      setGeneratedCreds({
+        username: created.username,
+        password: formData.password || 'Student2026!',
+        name: created.full_name,
+      });
+      setShowCreateModal(false);
+      toast.success('User created and saved to platform database!');
+    } catch (err) {
+      toast.error(err.message || 'Failed to create user');
+    }
   };
 
   const handleBulkCreate = (e) => {
@@ -109,32 +122,26 @@ export default function UserManagementPage() {
     const lines = bulkInput.trim().split('\n');
     const newStudents = [];
 
-    lines.forEach((line, index) => {
+    lines.forEach((line) => {
       const parts = line.split(',').map((p) => p.trim());
       if (parts.length >= 2) {
         newStudents.push({
-          id: `u-bulk-${Date.now()}-${index}`,
           username: parts[0],
+          password: 'Student2026!',
           full_name: parts[1],
           email: parts[2] || `${parts[0]}@student.edu.eg`,
           grade: parts[3] || '11',
           phone: parts[4] || '+20 100 000 0000',
           role: 'student',
-          status: 'active',
-          parent_name: 'Parent of ' + parts[1],
-          parent_phone: '+20 100 000 0000',
-          target_exam: 'SAT & EST',
-          avg_score: 80,
-          attendance: '100%',
-          joined_date: new Date().toISOString().split('T')[0],
         });
       }
     });
 
     if (newStudents.length > 0) {
-      setUsers([...newStudents, ...users]);
+      platformDb.bulkAddUsers(newStudents);
+      refreshUsers();
       setShowBulkModal(false);
-      toast.success(`Successfully imported ${newStudents.length} students!`);
+      toast.success(`Successfully imported and saved ${newStudents.length} students!`);
     } else {
       toast.error('Invalid CSV format. Please review lines.');
     }
@@ -339,7 +346,7 @@ export default function UserManagementPage() {
                         onClick={() => {
                           setGeneratedCreds({
                             username: u.username,
-                            password: 'password123',
+                            password: u.password || 'Student2026!',
                             name: u.full_name,
                           });
                           toast.success('Generated reset credentials.');
@@ -348,6 +355,13 @@ export default function UserManagementPage() {
                         title="Reset & view credentials"
                       >
                         <KeyRound className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(u.id, u.username)}
+                        className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition"
+                        title="Delete User"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </td>
                   </tr>

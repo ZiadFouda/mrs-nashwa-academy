@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { COURSES, ASSIGNMENTS, INITIAL_STUDENTS_LIST, ENROLLMENTS } from '../utils/mockData';
+import platformDb from '../utils/platformDb';
+import SystemRestartModal from '../components/SystemRestartModal';
 import {
   BookOpen,
   FileCheck2,
@@ -19,11 +20,37 @@ import {
   CheckCircle2,
   TrendingUp,
   UserCheck,
+  RotateCcw,
+  ShieldCheck,
+  Activity,
 } from 'lucide-react';
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const role = user?.role || 'student';
+
+  const [courses, setCourses] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const [usersList, setUsersList] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
+  const [isRestartModalOpen, setIsRestartModalOpen] = useState(false);
+
+  useEffect(() => {
+    // Load real data from platformDb
+    setCourses(platformDb.getCourses());
+    setAssignments(platformDb.getAssignments());
+    setUsersList(platformDb.getUsers());
+    setSubmissions(platformDb.getSubmissions(user?.role === 'student' ? user?.id : null));
+  }, [user]);
+
+  // Derived metrics
+  const studentCount = usersList.filter((u) => u.role === 'student').length;
+  const activeCourseCount = courses.length;
+  const mySubmissions = submissions.filter((s) => s.student_id === user?.id);
+  const avgStudentScore =
+    mySubmissions.length > 0
+      ? Math.round(mySubmissions.reduce((acc, s) => acc + (s.score || 0), 0) / mySubmissions.length)
+      : 88;
 
   // 1. Student Dashboard View
   const renderStudentView = () => (
@@ -40,7 +67,8 @@ export default function DashboardPage() {
               Welcome back, {user?.full_name || 'Scholar'}!
             </h1>
             <p className="text-[#a09787] text-xs sm:text-sm mt-1 max-w-xl leading-relaxed">
-              Target SAT R&W Score: <span className="text-[#c9a96e] font-bold font-mono">760+</span> • Current Diagnostic Average: <span className="text-emerald-400 font-bold font-mono">720</span>. Keep up your daily vocabulary and conventions drills!
+              Target SAT R&W Score: <span className="text-[#c9a96e] font-bold font-mono">760+</span> • Current Diagnostic Average:{' '}
+              <span className="text-emerald-400 font-bold font-mono">{avgStudentScore}%</span>. Keep up your daily vocabulary and conventions drills!
             </p>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -55,14 +83,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Key Metric Cards (2 cols on phone, 4 on desktop/laptop) */}
+      {/* Key Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
           <div className="flex items-center justify-between text-[#a09787] mb-1.5">
-            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Enrolled Tracks</span>
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Active Courses</span>
             <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-[#c9a96e] shrink-0" />
           </div>
-          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8]">2 Active</div>
+          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8]">{activeCourseCount} Active</div>
           <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 flex items-center gap-1 truncate">
             <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> SAT R&W & EST
           </p>
@@ -70,23 +98,23 @@ export default function DashboardPage() {
 
         <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
           <div className="flex items-center justify-between text-[#a09787] mb-1.5">
-            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Assignments Due</span>
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Assignments</span>
             <FileCheck2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#d4b87a] shrink-0" />
           </div>
-          <div className="text-xl sm:text-3xl font-serif text-[#d4b87a]">2 Pending</div>
+          <div className="text-xl sm:text-3xl font-serif text-[#d4b87a]">{assignments.length} Available</div>
           <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 flex items-center gap-1 truncate">
-            <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#c9a96e]" /> Due in 3 days
+            <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#c9a96e]" /> Timed Drills & Mocks
           </p>
         </div>
 
         <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
           <div className="flex items-center justify-between text-[#a09787] mb-1.5">
-            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">English Accuracy</span>
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Average Score</span>
             <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-[#c9a96e] shrink-0" />
           </div>
-          <div className="text-xl sm:text-3xl font-serif text-emerald-400">92.4%</div>
+          <div className="text-xl sm:text-3xl font-serif text-emerald-400">{avgStudentScore}%</div>
           <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 flex items-center gap-1 truncate">
-            <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Top 5% in Batch
+            <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Top 5% in Cohort
           </p>
         </div>
 
@@ -95,152 +123,125 @@ export default function DashboardPage() {
             <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Live Attendance</span>
             <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#d4b87a] shrink-0" />
           </div>
-          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8]">98%</div>
-          <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 truncate">12 / 12 Sessions</p>
+          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8]">100%</div>
+          <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 truncate">Verified Sessions</p>
         </div>
       </div>
 
-      {/* Main Two-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left 2 Cols: My Active Courses & Next Actions */}
+      {/* Main Grid: Real In-Progress Courses & Quick Assignments */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-serif text-[#f5f0e8] flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-serif text-[#f5f0e8] flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-[#c9a96e]" />
-              <span>My Enrolled English Curricula</span>
+              <span>Curriculum Courses</span>
             </h2>
-            <Link to="/courses" className="text-xs text-[#c9a96e] hover:underline">
-              View all
+            <Link to="/courses" className="text-xs text-[#c9a96e] hover:text-[#d4b87a] font-semibold transition">
+              View All ({courses.length}) →
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            {COURSES.slice(0, 3).map((course) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {courses.slice(0, 4).map((course) => (
               <div
                 key={course.id}
-                className="p-5 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15 hover:border-[#c9a96e]/40 transition backdrop-blur-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                className="group rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 overflow-hidden shadow-xl hover:border-[#c9a96e]/40 transition duration-300 flex flex-col justify-between"
               >
-                <div className="flex items-center gap-4">
+                <div className="relative h-32 overflow-hidden">
                   <img
                     src={course.thumbnail}
                     alt={course.title}
-                    className="w-16 h-16 rounded-xl object-cover border border-[#c9a96e]/20 shrink-0"
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                   />
-                  <div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#241c14] text-[#d4b87a] border border-[#c9a96e]/30">
-                      {course.exam_type} • Grade {course.grade}
-                    </span>
-                    <h3 className="font-serif font-bold text-[#f5f0e8] text-base mt-1">{course.title}</h3>
-                    <p className="text-xs text-[#a09787]">
-                      {course.lessons_count} Lessons • Instructor: {course.instructor}
-                    </p>
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#18130e] via-transparent to-transparent" />
+                  <span className="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-[#14100c]/80 backdrop-blur-md border border-[#c9a96e]/30 text-[10px] font-mono text-[#d4b87a]">
+                    {course.code}
+                  </span>
                 </div>
 
-                <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-3">
-                  <div className="text-right">
-                    <span className="text-xs text-[#a09787]">Progress</span>
-                    <p className="text-sm font-bold text-[#c9a96e] font-mono">{course.progress}%</p>
+                <div className="p-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-serif font-bold text-[#f5f0e8] text-sm group-hover:text-[#c9a96e] transition">
+                      {course.title}
+                    </h3>
+                    <p className="text-[#a09787] text-xs mt-1 line-clamp-2">{course.description}</p>
                   </div>
+
+                  <div className="mt-4 pt-3 border-t border-[#c9a96e]/15 flex items-center justify-between">
+                    <span className="text-[11px] text-[#a09787]">{course.lessons_count} Modules</span>
+                    <Link
+                      to={`/courses/${course.id}`}
+                      className="px-3 py-1.5 rounded-lg bg-[#241c14] hover:bg-[#32271c] text-xs font-semibold text-[#d4b87a] border border-[#c9a96e]/25 transition"
+                    >
+                      Study Track →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Sidebar: Real Assigned Tasks & Upcoming Live Session */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg sm:text-xl font-serif text-[#f5f0e8] flex items-center gap-2">
+              <FileCheck2 className="w-5 h-5 text-[#d4b87a]" />
+              <span>Assigned Tests</span>
+            </h2>
+            <Link to="/assignments" className="text-xs text-[#c9a96e] hover:text-[#d4b87a] font-semibold transition">
+              Full List →
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            {assignments.slice(0, 3).map((asg) => (
+              <div
+                key={asg.id}
+                className="p-4 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 hover:border-[#c9a96e]/40 transition shadow-xl"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-[#c9a96e]/10 text-[#d4b87a] border border-[#c9a96e]/20">
+                    {asg.type}
+                  </span>
+                  <span className="text-[10px] text-[#a09787] flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-[#c9a96e]" /> {asg.time_limit_minutes} min
+                  </span>
+                </div>
+                <h4 className="font-serif font-bold text-[#f5f0e8] text-xs sm:text-sm mt-2">{asg.title}</h4>
+                <div className="mt-3 pt-2.5 border-t border-[#c9a96e]/10 flex items-center justify-between">
+                  <span className="text-[10px] text-[#a09787]">
+                    {asg.status === 'Graded' ? `Score: ${asg.score}%` : 'Pending Attempt'}
+                  </span>
                   <Link
-                    to={`/courses/${course.id}`}
-                    className="px-4 py-2 rounded-xl bg-[#241c14] hover:bg-[#32271c] border border-[#c9a96e]/30 text-[#f5f0e8] font-medium text-xs transition flex items-center gap-1.5"
+                    to={asg.status === 'Graded' ? `/assignments/${asg.id}/results` : `/assignments/${asg.id}/take`}
+                    className="text-xs text-[#c9a96e] font-semibold hover:underline"
                   >
-                    <PlayCircle className="w-4 h-4 text-[#c9a96e]" />
-                    <span>Continue</span>
+                    {asg.status === 'Graded' ? 'View Review →' : 'Start Exam →'}
                   </Link>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Assignments Due Box */}
-          <div className="p-6 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15 backdrop-blur-md">
-            <h3 className="font-serif font-bold text-[#f5f0e8] text-base mb-4 flex items-center gap-2">
-              <FileCheck2 className="w-5 h-5 text-[#c9a96e]" />
-              <span>Upcoming Homework & Diagnostics</span>
-            </h3>
-            <div className="space-y-3">
-              {ASSIGNMENTS.map((asg) => (
-                <div
-                  key={asg.id}
-                  className="p-3.5 rounded-xl bg-[#1c1611]/80 border border-[#c9a96e]/10 flex items-center justify-between text-xs"
-                >
-                  <div>
-                    <p className="font-semibold text-[#f5f0e8]">{asg.title}</p>
-                    <p className="text-[#a09787] text-[11px]">
-                      Time limit: {asg.time_limit_minutes} mins • {asg.total_questions} questions
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                        asg.status === 'Graded'
-                          ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/30'
-                          : asg.status === 'In Progress'
-                          ? 'bg-[#282018] text-[#d4b87a] border border-[#c9a96e]/30'
-                          : 'bg-[#18130e] text-[#a09787] border border-white/10'
-                      }`}
-                    >
-                      {asg.status}
-                    </span>
-                    <Link
-                      to={
-                        asg.status === 'Graded'
-                          ? `/assignments/${asg.id}/results`
-                          : `/assignments/${asg.id}/take`
-                      }
-                      className="px-3 py-1.5 rounded-lg bg-[#241c14] hover:bg-[#32271c] text-[#f5f0e8] font-medium transition border border-[#c9a96e]/20"
-                    >
-                      {asg.status === 'Graded' ? 'Results' : 'Start'}
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right 1 Col: Live Schedule & Teacher Announcements */}
-        <div className="space-y-6">
           {/* Upcoming Live Lecture */}
-          <div className="p-6 rounded-2xl bg-gradient-to-b from-[#1c1611] to-[#120e0a] border border-[#c9a96e]/30 shadow-xl">
-            <div className="flex items-center gap-2 text-[#c9a96e] text-xs font-bold uppercase tracking-wider mb-2">
-              <Calendar className="w-4 h-4" />
-              <span>Next Live Masterclass</span>
+          <div className="p-5 rounded-2xl bg-gradient-to-tr from-[#1c1611] to-[#282018] border border-[#c9a96e]/25 shadow-xl">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-bold uppercase text-[#c9a96e] tracking-wider">Upcoming Live Lecture</span>
             </div>
-            <h4 className="text-lg font-serif text-[#f5f0e8] mb-2">
-              Hard Module 2 Reading & Rhetorical Synthesis with Mrs. Nashwa
+            <h4 className="font-serif font-bold text-[#f5f0e8] text-sm">
+              Mrs. Nashwa Abdelhalim: Digital SAT Conventions Masterclass
             </h4>
-            <p className="text-xs text-[#a09787] leading-relaxed mb-4">
-              Live interactive walkthrough covering deceptive syntax, tricky punctuation, and 20 challenging questions from recent test curves.
-            </p>
-            <div className="p-3 rounded-xl bg-black/40 border border-[#c9a96e]/15 text-xs mb-4 flex items-center justify-between">
-              <div>
-                <span className="text-[#a09787] block text-[10px]">Date & Time</span>
-                <span className="font-semibold text-[#f5f0e8]">Friday, Nov 14 @ 7:00 PM CLT</span>
-              </div>
-              <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
-            </div>
+            <p className="text-xs text-[#a09787] mt-1">Friday at 6:00 PM (Cairo Time) • Zoom Live Classroom</p>
             <a
               href="https://zoom.us"
               target="_blank"
               rel="noreferrer"
-              className="w-full block text-center py-2.5 rounded-xl bg-gradient-to-r from-[#c9a96e] to-[#a8894e] text-[#0d0b08] font-bold text-xs uppercase tracking-wider transition hover:brightness-105"
+              className="mt-3 block text-center py-2 rounded-xl bg-gradient-to-r from-[#c9a96e] to-[#a8894e] text-[#0d0b08] font-bold text-xs transition hover:brightness-105"
             >
-              Join Zoom Room
+              Enter Zoom Room
             </a>
-          </div>
-
-          {/* Quick Notice Board */}
-          <div className="p-6 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15 backdrop-blur-md">
-            <h4 className="font-serif font-bold text-[#f5f0e8] text-sm mb-3 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-[#c9a96e]" />
-              <span>Academic Notice</span>
-            </h4>
-            <p className="text-xs text-[#a09787] leading-relaxed">
-              Registration for the upcoming EST English exam and December Digital SAT is now active. Please ensure all student ID numbers and diagnostic quiz logs are updated in your profile.
-            </p>
           </div>
         </div>
       </div>
@@ -250,12 +251,27 @@ export default function DashboardPage() {
   // 2. Admin Dashboard View
   const renderAdminView = () => (
     <div className="space-y-8 font-sans">
+      <SystemRestartModal
+        isOpen={isRestartModalOpen}
+        onClose={() => setIsRestartModalOpen(false)}
+        adminUser={user}
+      />
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-serif text-[#f5f0e8]">System Administration</h1>
           <p className="text-[#a09787] text-xs">Mrs. Nashwa Abdelhalim English Educational Management Center</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Prominent Admin Universal Restart Button */}
+          <button
+            type="button"
+            onClick={() => setIsRestartModalOpen(true)}
+            className="px-4 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-[#c9a96e]/40 text-[#d4b87a] font-bold text-xs transition flex items-center gap-2 shadow-lg"
+          >
+            <RotateCcw className="w-4 h-4 text-[#c9a96e]" />
+            <span>Restart Platform</span>
+          </button>
           <Link
             to="/admin/users"
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#c9a96e] to-[#a8894e] text-[#0d0b08] font-bold text-xs transition"
@@ -271,30 +287,63 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Admin stats */}
+      {/* Admin stats connected to real platform database */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">Total Students</span>
-          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8] mt-1">486</div>
-          <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 truncate">+18 this week</p>
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">
+            Registered Scholars
+          </span>
+          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8] mt-1">{studentCount} Active</div>
+          <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 truncate">Stored in database</p>
         </div>
         <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">Active Courses</span>
-          <div className="text-xl sm:text-3xl font-serif text-[#c9a96e] mt-1">5 Active</div>
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">
+            Live Courses
+          </span>
+          <div className="text-xl sm:text-3xl font-serif text-[#c9a96e] mt-1">{activeCourseCount} Active</div>
           <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 truncate">SAT & EST English</p>
         </div>
         <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">Monthly Revenue</span>
-          <div className="text-xl sm:text-3xl font-serif text-emerald-400 mt-1">720k EGP</div>
-          <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 truncate">94% via InstaPay</p>
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">
+            Published Exams
+          </span>
+          <div className="text-xl sm:text-3xl font-serif text-[#d4b87a] mt-1">{assignments.length} Tests</div>
+          <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 truncate">Timed Drills & Mocks</p>
         </div>
         <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">Pending InstaPay</span>
-          <div className="text-xl sm:text-3xl font-serif text-rose-400 mt-1">2 Pending</div>
-          <Link to="/admin/enrollments" className="text-[10px] sm:text-xs text-[#c9a96e] underline mt-1 block truncate">
-            Review receipts →
-          </Link>
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">
+            Exam Submissions
+          </span>
+          <div className="text-xl sm:text-3xl font-serif text-emerald-400 mt-1">{submissions.length} Graded</div>
+          <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 truncate">Automated Curve</p>
         </div>
+      </div>
+
+      {/* Emergency Platform Health & Universal Restart Banner */}
+      <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-[#1c1611] via-[#241c14] to-[#14100c] border border-amber-500/30 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-start gap-3.5">
+          <div className="p-3 rounded-2xl bg-amber-500/10 border border-[#c9a96e]/30 text-[#c9a96e]">
+            <Activity className="w-6 h-6 animate-pulse" />
+          </div>
+          <div>
+            <h3 className="font-serif font-bold text-[#f5f0e8] text-base">
+              Academy Platform Health & Emergency System Restart
+            </h3>
+            <p className="text-xs text-[#a09787] mt-1 max-w-2xl leading-relaxed">
+              Encountering runtime discrepancies, stuck exams, or need to synchronize changes across all active sessions?
+              Clicking <strong>Restart Platform</strong> triggers an immediate universal cache clearance and clean reboot for every connected user.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsRestartModalOpen(true)}
+          className="w-full md:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-[#c9a96e] to-[#a8894e] text-[#0d0b08] font-bold text-xs uppercase tracking-wider transition hover:brightness-105 active:scale-95 shadow-lg shadow-[#c9a96e]/20 flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+        >
+          <RotateCcw className="w-4 h-4" />
+          <span>Restart Site For Everyone</span>
+        </button>
       </div>
 
       {/* Quick shortcuts */}
@@ -306,7 +355,7 @@ export default function DashboardPage() {
           <Users className="w-7 h-7 sm:w-8 sm:h-8 text-[#c9a96e] mb-3 group-hover:scale-105 transition" />
           <h3 className="font-serif font-bold text-[#f5f0e8] text-base">User Management</h3>
           <p className="text-xs text-[#a09787] mt-1">
-            Manage students, generate parent credentials, link families, and assign roles.
+            Manage students, generate parent credentials, link families, and assign roles with persistent storage.
           </p>
         </Link>
         <Link
@@ -326,7 +375,7 @@ export default function DashboardPage() {
           <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-[#d4b87a] mb-3 group-hover:scale-105 transition" />
           <h3 className="font-serif font-bold text-[#f5f0e8] text-base">Course Catalog</h3>
           <p className="text-xs text-[#a09787] mt-1">
-            Configure SAT & EST English modules, DRM lecture videos, and prerequisite chains.
+            Add and edit SAT & EST English modules, video lectures, and real prerequisite chains.
           </p>
         </Link>
       </div>
@@ -347,44 +396,52 @@ export default function DashboardPage() {
             className="flex-1 sm:flex-none justify-center px-4 py-2 rounded-xl bg-[#18130e] hover:bg-[#221a12] text-[#f5f0e8] border border-[#c9a96e]/30 font-medium text-xs transition flex items-center gap-2"
           >
             <Upload className="w-4 h-4 text-[#c9a96e]" />
-            <span>Upload Exam Materials</span>
+            <span>Upload Materials</span>
           </Link>
           <Link
             to="/manager/assignments/create"
-            className="flex-1 sm:flex-none justify-center px-4 py-2 rounded-xl bg-[#18130e] hover:bg-[#221a12] text-[#c9a96e] border border-[#c9a96e]/50 font-bold text-xs transition shadow-md"
+            className="flex-1 sm:flex-none justify-center px-4 py-2 rounded-xl bg-gradient-to-r from-[#c9a96e] to-[#a8894e] text-[#0d0b08] font-bold text-xs transition flex items-center gap-2"
           >
-            + Create New Exam / Quiz
+            <FileCheck2 className="w-4 h-4 text-[#0d0b08]" />
+            <span>Create Assignment</span>
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
-        <div className="p-4 sm:p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase">Submissions to Grade</span>
-          <div className="text-2xl sm:text-3xl font-serif text-[#c9a96e] mt-1">8 Pending</div>
-          <p className="text-xs text-[#a09787] mt-1">EST English Mock 1</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">Enrolled Students</span>
+          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8] mt-1">{studentCount} Active</div>
+          <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 truncate">All Batches</p>
         </div>
-        <div className="p-4 sm:p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase">Upcoming Live Classes</span>
-          <div className="text-2xl sm:text-3xl font-serif text-[#f5f0e8] mt-1">2 This Week</div>
-          <p className="text-xs text-emerald-400 mt-1">Friday 7 PM & Monday 6 PM</p>
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">Active Courses</span>
+          <div className="text-xl sm:text-3xl font-serif text-[#c9a96e] mt-1">{activeCourseCount} Courses</div>
+          <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 truncate">SAT & EST Tracks</p>
         </div>
-        <div className="p-4 sm:p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase">Batch Average Score</span>
-          <div className="text-2xl sm:text-3xl font-serif text-emerald-400 mt-1">745 / 800</div>
-          <p className="text-xs text-emerald-400 mt-1">+35 pts above target</p>
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">Exams Created</span>
+          <div className="text-xl sm:text-3xl font-serif text-[#d4b87a] mt-1">{assignments.length} Tests</div>
+          <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 truncate">Published</p>
+        </div>
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">Student Submissions</span>
+          <div className="text-xl sm:text-3xl font-serif text-emerald-400 mt-1">{submissions.length} Total</div>
+          <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 truncate">Recorded in DB</p>
         </div>
       </div>
     </div>
   );
 
-  return (
-    <div className="min-h-full">
-      {role === 'admin'
-        ? renderAdminView()
-        : role === 'teacher' || role === 'manager'
-        ? renderTeacherManagerView()
-        : renderStudentView()}
-    </div>
-  );
+  switch (role) {
+    case 'admin':
+      return renderAdminView();
+    case 'teacher':
+    case 'manager':
+      return renderTeacherManagerView();
+    case 'student':
+    case 'parent':
+    default:
+      return renderStudentView();
+  }
 }

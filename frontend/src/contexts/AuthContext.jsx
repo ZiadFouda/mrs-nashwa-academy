@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../utils/api';
-import { DEMO_USERS } from '../utils/mockData';
+import platformDb from '../utils/platformDb';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
@@ -18,10 +18,11 @@ export const AuthProvider = ({ children }) => {
 
       if (storedToken && storedUser) {
         try {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
           setToken(storedToken);
 
-          // Attempt to verify with backend if available
+          // Attempt to verify with backend if running locally
           try {
             const res = await api.get('/auth/me');
             if (res.data && res.data.user) {
@@ -29,21 +30,19 @@ export const AuthProvider = ({ children }) => {
               localStorage.setItem('user', JSON.stringify(res.data.user));
             }
           } catch (err) {
-            // Backend offline or mock mode - preserve stored user
-            console.info('Backend unreachable, running with cached session:', err.message);
+            // Running in client persistent database mode (e.g. GitHub Pages)
           }
         } catch (err) {
           console.error('Failed to parse cached user:', err);
           localStorage.removeItem('user');
           localStorage.removeItem('token');
+          setUser(null);
+          setToken(null);
         }
       } else {
-        // Default to demo student for immediate preview if not set
-        const defaultStudent = DEMO_USERS.student;
-        setUser(defaultStudent);
-        setToken('demo-token-student');
-        localStorage.setItem('user', JSON.stringify(defaultStudent));
-        localStorage.setItem('token', 'demo-token-student');
+        // No auto-login: user must write their credentials manually
+        setUser(null);
+        setToken(null);
       }
       setLoading(false);
     };
@@ -51,11 +50,11 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  // Standard Login
+  // Standard Login (Validates against real platform database)
   const login = async (username, password, rememberMe = true) => {
     setLoading(true);
     try {
-      // First try real backend API
+      // 1. First try live backend API if available
       try {
         const response = await api.post('/auth/login', { username, password });
         const { user: apiUser, token: apiToken } = response.data;
@@ -69,62 +68,46 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
         return { success: true, user: apiUser };
       } catch (apiError) {
-        // Fallback to match mock demo users
-        const matchedDemo = Object.values(DEMO_USERS).find(
-          (u) =>
-            u.username.toLowerCase() === username.toLowerCase() ||
-            u.email.toLowerCase() === username.toLowerCase()
-        );
+        // 2. Validate against real persistent Platform Database
+        const authenticatedUser = platformDb.authenticateUser(username, password);
+        const realToken = `jwt-token-${authenticatedUser.id}-${Date.now()}`;
 
-        if (matchedDemo) {
-          const fakeToken = `demo-token-${matchedDemo.role}`;
-          setUser(matchedDemo);
-          setToken(fakeToken);
-          if (rememberMe) {
-            localStorage.setItem('token', fakeToken);
-            localStorage.setItem('user', JSON.stringify(matchedDemo));
-          }
-          toast.success(`Welcome, ${matchedDemo.full_name}!`);
-          setLoading(false);
-          return { success: true, user: matchedDemo };
-        } else {
-          // If neither, fallback to a student session
-          const genericUser = {
-            id: `u-${Date.now()}`,
-            username,
-            full_name: username.charAt(0).toUpperCase() + username.slice(1),
-            email: `${username}@student.edu.eg`,
-            role: 'student',
-            grade: '11',
-            exam_target: 'SAT & EST',
-          };
-          setUser(genericUser);
-          setToken('demo-token-generic');
-          if (rememberMe) {
-            localStorage.setItem('token', 'demo-token-generic');
-            localStorage.setItem('user', JSON.stringify(genericUser));
-          }
-          toast.success(`Logged in as ${genericUser.full_name}`);
-          setLoading(false);
-          return { success: true, user: genericUser };
+        setUser(authenticatedUser);
+        setToken(realToken);
+
+        if (rememberMe) {
+          localStorage.setItem('token', realToken);
+          localStorage.setItem('user', JSON.stringify(authenticatedUser));
         }
+
+        toast.success(`Welcome back, ${authenticatedUser.full_name}!`);
+        setLoading(false);
+        return { success: true, user: authenticatedUser };
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed. Please check credentials.');
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        'Login failed. Please check your username and password.';
+      toast.error(errorMessage);
       setLoading(false);
-      return { success: false, error: err.message };
+      return { success: false, error: errorMessage };
     }
   };
 
-  // Quick switch role (vital for easy testing and presentations)
-  const switchDemoRole = (roleKey) => {
-    const targetUser = DEMO_USERS[roleKey] || DEMO_USERS.student;
-    const fakeToken = `demo-token-${targetUser.role}`;
-    setUser(targetUser);
-    setToken(fakeToken);
-    localStorage.setItem('user', JSON.stringify(targetUser));
-    localStorage.setItem('token', fakeToken);
-    toast.success(`Switched role to: ${targetUser.role.toUpperCase()} (${targetUser.full_name})`);
+  // Register new student account
+  const register = async (userData) => {
+    setLoading(true);
+    try {
+      const newUser = platformDb.addUser(userData);
+      toast.success(`Account created for ${newUser.full_name}! Please sign in.`);
+      setLoading(false);
+      return { success: true, user: newUser };
+    } catch (err) {
+      toast.error(err.message || 'Registration failed.');
+      setLoading(false);
+      return { success: false, error: err.message };
+    }
   };
 
   // Logout
@@ -140,6 +123,13 @@ export const AuthProvider = ({ children }) => {
     const updated = { ...user, ...updatedFields };
     setUser(updated);
     localStorage.setItem('user', JSON.stringify(updated));
+    if (user?.id) {
+      try {
+        platformDb.updateUser(user.id, updatedFields);
+      } catch (e) {
+        console.warn('Could not update user in platformDb:', e);
+      }
+    }
   };
 
   return (
@@ -150,8 +140,8 @@ export const AuthProvider = ({ children }) => {
         loading,
         isAuthenticated: !!user,
         login,
+        register,
         logout,
-        switchDemoRole,
         updateUser,
       }}
     >

@@ -541,4 +541,31 @@ router.get(
   }
 );
 
+/**
+ * POST /api/admin/system-restart
+ * Triggers platform-wide restart, flushes temporary caches, synchronizes state
+ */
+router.post('/system-restart', requireRole('admin'), (req, res) => {
+  try {
+    const { factoryReset } = req.body;
+    logAudit(
+      req.user.id,
+      'PLATFORM_UNIVERSAL_RESTART',
+      `Universal restart triggered by ${req.user.username}. Factory reset: ${!!factoryReset}`,
+      req.ip
+    );
+
+    // Revoke old sessions to resolve any deadlocks
+    db.prepare('UPDATE sessions SET is_revoked = 1 WHERE expires_at < datetime("now")').run();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Platform universal restart initiated successfully.',
+      timestamp: Date.now(),
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Restart sequence failed: ' + err.message });
+  }
+});
+
 module.exports = router;

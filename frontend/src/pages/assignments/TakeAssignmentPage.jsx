@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ASSIGNMENTS, ASSIGNMENT_QUESTIONS } from '../../utils/mockData';
+import platformDb from '../../utils/platformDb';
+import { useAuth } from '../../contexts/AuthContext';
 import Timer from '../../components/Timer';
 import {
   Clock,
@@ -19,9 +20,10 @@ import toast from 'react-hot-toast';
 export default function TakeAssignmentPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const assignment = ASSIGNMENTS.find((a) => a.id === id) || ASSIGNMENTS[0];
-  const questions = ASSIGNMENT_QUESTIONS;
+  const assignment = platformDb.getAssignmentById(id) || platformDb.getAssignments()[0];
+  const questions = platformDb.getQuestions(assignment?.id);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -49,9 +51,9 @@ export default function TakeAssignmentPage() {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+  }, [answers, questions]);
 
-  const currentQ = questions[currentIndex];
+  const currentQ = questions[currentIndex] || questions[0];
 
   const handleSelectOption = (questionId, optionId) => {
     setAnswers((prev) => ({
@@ -86,10 +88,45 @@ export default function TakeAssignmentPage() {
 
   const handleAutoSubmit = () => {
     setIsSubmitting(true);
+
+    // Calculate real score based on student's actual choices
+    let correct = 0;
+    questions.forEach((q) => {
+      const studentAns = answers[q.id];
+      if (studentAns) {
+        if (q.type === 'fill_in_blank') {
+          if (q.correct_text && studentAns.trim().toLowerCase() === q.correct_text.trim().toLowerCase()) {
+            correct++;
+          }
+        } else {
+          if (studentAns === q.correct_option) {
+            correct++;
+          }
+        }
+      }
+    });
+
+    const total = questions.length || 1;
+    const scorePct = Math.round((correct / total) * 100);
+    const satCurve = Math.min(800, 400 + Math.round((scorePct / 100) * 400));
+
+    // Persist real submission to platform database
+    platformDb.saveSubmission({
+      assignment_id: assignment.id,
+      student_id: user?.id || 'u-student-01',
+      student_name: user?.full_name || 'Scholar',
+      answers,
+      score: scorePct,
+      correct_count: correct,
+      incorrect_count: total - correct,
+      total_questions: total,
+      sat_curve_score: satCurve,
+    });
+
     setTimeout(() => {
-      navigate(`/assignments/${id || 'asg-01'}/results`);
-      toast.success('Exam submitted and graded successfully!');
-    }, 600);
+      navigate(`/assignments/${assignment.id}/results`);
+      toast.success(`Exam submitted! Score: ${scorePct}% (${satCurve}/800)`);
+    }, 500);
   };
 
   const answeredCount = Object.keys(answers).length;

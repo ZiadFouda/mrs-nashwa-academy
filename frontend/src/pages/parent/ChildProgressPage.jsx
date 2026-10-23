@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { INITIAL_STUDENTS_LIST, COURSES } from '../../utils/mockData';
+import platformDb from '../../utils/platformDb';
 import {
   ArrowLeft,
   BookOpen,
@@ -18,7 +18,7 @@ import toast from 'react-hot-toast';
 
 export default function ChildProgressPage() {
   const { id } = useParams();
-  const student = INITIAL_STUDENTS_LIST.find((s) => s.id === id) || INITIAL_STUDENTS_LIST[0];
+  const student = platformDb.getUserById(id) || platformDb.getUsers().find((u) => u.role === 'student') || platformDb.getUsers()[0];
 
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
