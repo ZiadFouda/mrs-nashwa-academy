@@ -1,47 +1,33 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { ShieldAlert, EyeOff, Smartphone } from 'lucide-react';
+import { ShieldAlert, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // ═══════════════════════════════════════════════════════════════════════
-//  SECURITY SHIELD v5 — ZERO-LATENCY PRE-EMPTIVE BLACKOUT SHIELD
-//  Guarantees:
-//  1. Whenever user or OS takes a screenshot, triggers keys, or switches apps,
-//     the screen is instantaneously pitched black (#000000).
-//  2. The notification / alert is displayed immediately inside the browser
-//     to warn the user that their action is prohibited and logged.
-//  3. All captured photos and recent-app previews result in pitch-black imagery.
+//  SECURITY SHIELD v6 — STABLE, NON-INTRUSIVE DEFENSE
+//  Fixes:
+//  1. ELIMINATED false-positive triggers on phones & tablets (normal taps,
+//     scrolling, virtual keyboard popups, iOS address-bar collapse, etc.)
+//  2. Only reacts to REAL, verified actions:
+//     - Actual PrintScreen / Snipping key combinations (Desktop)
+//     - Explicit screen capture API streams (Loom, Meet, Discord)
+//     - True app switching / backgrounding (when user actually leaves tab)
+//  3. Mobile browsing is completely smooth and never triggers random alerts.
 // ═══════════════════════════════════════════════════════════════════════
 
 const isTouchDevice = () =>
-  'ontouchstart' in window || navigator.maxTouchPoints > 0;
-const isIOS = () =>
-  /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const isAndroid = () => /Android/i.test(navigator.userAgent);
-const isMobileOrTablet = () => isTouchDevice() || isIOS() || isAndroid();
+  typeof window !== 'undefined' &&
+  ('ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0));
 
 export default function SecurityShield({ children }) {
   const { user } = useAuth();
   const [isWindowBlurred, setIsWindowBlurred] = useState(false);
   const [screenshotAttempted, setScreenshotAttempted] = useState(false);
   const blurTimeoutRef = useRef(null);
-  const touchTrackRef = useRef({ count: 0, timer: null });
-  const volumeKeyTimeRef = useRef(0);
 
-  // Direct DOM references for zero-lag hardware blackening
-  const blackScreenOverlayRef = useRef(null);
-
-  // ─── Instant Blackout Trigger ─────────────────────────────────────
-  const triggerInstantBlackout = useCallback((reason = 'Screenshot attempt') => {
-    // 1. Immediately force pure black screen on root DOM before paint
-    if (blackScreenOverlayRef.current) {
-      blackScreenOverlayRef.current.style.display = 'block';
-      blackScreenOverlayRef.current.style.opacity = '1';
-    }
-    document.body.classList.add('recording-detected');
-
-    // 2. Overwrite clipboard to destroy any captured buffers or snippets
+  // ─── Verified Lockout Trigger ─────────────────────────────────────
+  const triggerVerifiedLockout = useCallback((reason = 'Capture attempt blocked') => {
+    // Overwrite clipboard if accessible
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(
@@ -52,33 +38,22 @@ export default function SecurityShield({ children }) {
       /* ignore */
     }
 
-    // 3. Display user-facing notification alert
     setScreenshotAttempted(true);
     toast.error('⚠️ Screenshot Blocked! Captured image is blacked out.', {
       id: 'screenshot-lockout-alert',
-      duration: 4000,
+      duration: 3500,
       icon: '🛡️',
     });
 
-    // 4. Keep screen pure black for 2.2 seconds to cover the OS capture window
     setTimeout(() => {
-      document.body.classList.remove('recording-detected');
       setScreenshotAttempted(false);
-      if (blackScreenOverlayRef.current && !document.hidden && document.hasFocus()) {
-        blackScreenOverlayRef.current.style.opacity = '0';
-        setTimeout(() => {
-          if (blackScreenOverlayRef.current && !document.hidden && document.hasFocus()) {
-            blackScreenOverlayRef.current.style.display = 'none';
-          }
-        }, 150);
-      }
     }, 2200);
   }, []);
 
   useEffect(() => {
-    // ─── Keydown & Keyup Interception for Desktop & Android ─────────
+    // ─── 1. Desktop Keyboard Interception ───────────────────────────
     const checkSecurityKeys = (e) => {
-      // PrintScreen / PrtScn
+      // PrintScreen / PrtScn key
       if (
         e.key === 'PrintScreen' ||
         e.keyCode === 44 ||
@@ -86,7 +61,7 @@ export default function SecurityShield({ children }) {
         e.key === 'Snapshot'
       ) {
         e.preventDefault();
-        triggerInstantBlackout('PrintScreen pressed');
+        triggerVerifiedLockout('PrintScreen pressed');
         return false;
       }
 
@@ -96,14 +71,14 @@ export default function SecurityShield({ children }) {
         (e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's'))
       ) {
         e.preventDefault();
-        triggerInstantBlackout('Snipping Tool shortcut');
+        triggerVerifiedLockout('Snipping Tool shortcut');
         return false;
       }
 
       // macOS Screenshots (Cmd + Shift + 3, 4, 5)
       if (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5')) {
         e.preventDefault();
-        triggerInstantBlackout('macOS screenshot shortcut');
+        triggerVerifiedLockout('macOS screenshot shortcut');
         return false;
       }
 
@@ -121,12 +96,6 @@ export default function SecurityShield({ children }) {
         return false;
       }
 
-      // View Source (Ctrl+U)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
-        e.preventDefault();
-        return false;
-      }
-
       // DevTools (F12, Ctrl+Shift+I/J/C)
       if (
         e.key === 'F12' ||
@@ -140,108 +109,44 @@ export default function SecurityShield({ children }) {
       }
     };
 
-    // ─── Android Volume Keys (Power + VolDown Screenshot Combo) ────
-    const handleAndroidVolume = (e) => {
-      if (!isAndroid()) return;
-      if (
-        e.key === 'AudioVolumeDown' ||
-        e.key === 'AudioVolumeUp' ||
-        e.keyCode === 24 ||
-        e.keyCode === 25
-      ) {
-        const now = Date.now();
-        if (now - volumeKeyTimeRef.current < 600) {
-          // Rapid volume key tap: trigger immediate blackout before hardware snap
-          triggerInstantBlackout('Android volume combo detected');
-        }
-        volumeKeyTimeRef.current = now;
+    // ─── 2. True Backgrounding & App-Switching (No False Positives) ───
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // User genuinely switched tabs or minimized browser
+        setIsWindowBlurred(true);
+      } else {
+        // User came back to tab
+        setIsWindowBlurred(false);
       }
     };
 
-    // ─── Touch Gesture Interception ──────────────────────────────────
-    const handleTouchStart = (e) => {
-      // 3 or more fingers (Android swipe-to-capture / iOS gesture)
-      if (e.touches && e.touches.length >= 3) {
-        triggerInstantBlackout('Multi-finger screenshot gesture');
-      }
-
-      // Rapid consecutive tap detection
-      touchTrackRef.current.count++;
-      if (touchTrackRef.current.timer) clearTimeout(touchTrackRef.current.timer);
-      touchTrackRef.current.timer = setTimeout(() => {
-        touchTrackRef.current.count = 0;
-      }, 400);
-
-      if (touchTrackRef.current.count >= 4) {
-        triggerInstantBlackout('Rapid tap sequence');
-        touchTrackRef.current.count = 0;
-      }
-    };
-
-    // ─── Window Blur & App Switch Blackout ───────────────────────────
-    const handleBlur = () => {
+    // On Desktop only: blur when clicking outside window
+    const handleDesktopBlur = () => {
+      if (isTouchDevice()) return; // Never blur touch devices on input focus or scroll
       const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
       if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
 
-      if (blackScreenOverlayRef.current) {
-        blackScreenOverlayRef.current.style.display = 'block';
-        blackScreenOverlayRef.current.style.opacity = '1';
-      }
-      setIsWindowBlurred(true);
+      blurTimeoutRef.current = setTimeout(() => {
+        if (!document.hasFocus()) {
+          setIsWindowBlurred(true);
+        }
+      }, 300);
     };
 
-    const handleFocus = () => {
+    const handleDesktopFocus = () => {
       if (blurTimeoutRef.current) {
         clearTimeout(blurTimeoutRef.current);
         blurTimeoutRef.current = null;
       }
       setIsWindowBlurred(false);
-      if (blackScreenOverlayRef.current && !screenshotAttempted) {
-        blackScreenOverlayRef.current.style.opacity = '0';
-        setTimeout(() => {
-          if (blackScreenOverlayRef.current && !document.hidden && document.hasFocus()) {
-            blackScreenOverlayRef.current.style.display = 'none';
-          }
-        }, 150);
-      }
     };
 
-    // ─── Page Visibility Change (iOS screenshot & app switcher) ─────
-    let lastHiddenTime = 0;
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        lastHiddenTime = Date.now();
-        if (blackScreenOverlayRef.current) {
-          blackScreenOverlayRef.current.style.display = 'block';
-          blackScreenOverlayRef.current.style.opacity = '1';
-        }
-        setIsWindowBlurred(true);
-      } else {
-        const elapsed = Date.now() - lastHiddenTime;
-        // iOS screenshot characteristic: blur -> focus cycle under 450ms
-        if (isIOS() && lastHiddenTime > 0 && elapsed < 450) {
-          triggerInstantBlackout('iOS screenshot burst');
-        } else {
-          setIsWindowBlurred(false);
-          if (blackScreenOverlayRef.current && !screenshotAttempted) {
-            blackScreenOverlayRef.current.style.opacity = '0';
-            setTimeout(() => {
-              if (blackScreenOverlayRef.current && !document.hidden && document.hasFocus()) {
-                blackScreenOverlayRef.current.style.display = 'none';
-              }
-            }, 150);
-          }
-        }
-        lastHiddenTime = 0;
-      }
-    };
-
-    // ─── Context Menu & Drag Blockers ────────────────────────────────
+    // ─── 3. Context Menu & Copy Restrictions ────────────────────────
     const handleContextMenu = (e) => {
       const tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
       if (tag === 'input' || tag === 'textarea') return;
       e.preventDefault();
-      toast('🔒 Protected: Context menu and saving disabled.', {
+      toast('🔒 Protected: Saving or right-clicking materials is restricted.', {
         id: 'no-context',
         icon: '🛡️',
         style: { background: '#1c1611', color: '#c9a96e', border: '1px solid rgba(201,169,110,0.3)' },
@@ -254,19 +159,22 @@ export default function SecurityShield({ children }) {
       if (tag === 'input' || tag === 'textarea') return;
       e.preventDefault();
       if (e.clipboardData) {
-        e.clipboardData.setData('text/plain', '⚠️ [PROTECTED] Materials from Mrs. Nashwa Abdelhalim Academy are copyrighted.');
+        e.clipboardData.setData(
+          'text/plain',
+          '⚠️ [PROTECTED] Materials from Mrs. Nashwa Abdelhalim Academy are copyrighted.'
+        );
       }
       toast.error('Copying is disabled to protect educational materials.', { id: 'no-copy' });
       return false;
     };
 
-    // ─── Screen Capture API Override (Loom, Meet, Discord) ───────────
+    // ─── 4. Screen Capture API Override (Loom, Meet, Discord) ────────
     let originalGetDisplayMedia = null;
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
         originalGetDisplayMedia = navigator.mediaDevices.getDisplayMedia;
         navigator.mediaDevices.getDisplayMedia = async () => {
-          triggerInstantBlackout('Screen capture API request');
+          triggerVerifiedLockout('Screen recording extension');
           throw new Error('Screen capture disabled by educational security shield.');
         };
       }
@@ -277,37 +185,37 @@ export default function SecurityShield({ children }) {
     // Attach listeners
     window.addEventListener('keydown', checkSecurityKeys, true);
     window.addEventListener('keyup', checkSecurityKeys, true);
-    window.addEventListener('keydown', handleAndroidVolume, true);
     window.addEventListener('contextmenu', handleContextMenu);
     window.addEventListener('copy', handleCopy);
     window.addEventListener('cut', handleCopy);
-    window.addEventListener('blur', handleBlur);
-    window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    if (isMobileOrTablet()) {
-      window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    if (!isTouchDevice()) {
+      window.addEventListener('blur', handleDesktopBlur);
+      window.addEventListener('focus', handleDesktopFocus);
     }
 
     return () => {
       window.removeEventListener('keydown', checkSecurityKeys, true);
       window.removeEventListener('keyup', checkSecurityKeys, true);
-      window.removeEventListener('keydown', handleAndroidVolume, true);
       window.removeEventListener('contextmenu', handleContextMenu);
       window.removeEventListener('copy', handleCopy);
       window.removeEventListener('cut', handleCopy);
-      window.removeEventListener('blur', handleBlur);
-      window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
 
-      if (isMobileOrTablet()) {
-        window.removeEventListener('touchstart', handleTouchStart);
+      if (!isTouchDevice()) {
+        window.removeEventListener('blur', handleDesktopBlur);
+        window.removeEventListener('focus', handleDesktopFocus);
       }
+
       if (originalGetDisplayMedia && navigator.mediaDevices) {
         navigator.mediaDevices.getDisplayMedia = originalGetDisplayMedia;
       }
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+      }
     };
-  }, [triggerInstantBlackout, screenshotAttempted]);
+  }, [triggerVerifiedLockout]);
 
   const studentIdentifier = user
     ? `${user.full_name || user.username} • ID: ${user.id || 'STU-001'} • ${user.email || 'enrolled'}`
@@ -315,39 +223,13 @@ export default function SecurityShield({ children }) {
 
   return (
     <div className="relative min-h-screen select-none protected-content">
-      {/* ═══════════════════════════════════════════════════════════════
-          PURE HARDWARE BLACKOUT OVERLAY (Captures as 100% Solid Black)
-          Active during screenshot attempts, app switches, and blur
-          ═══════════════════════════════════════════════════════════════ */}
-      <div
-        ref={blackScreenOverlayRef}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 999990,
-          backgroundColor: '#000000',
-          display: isWindowBlurred || screenshotAttempted ? 'block' : 'none',
-          opacity: isWindowBlurred || screenshotAttempted ? 1 : 0,
-          pointerEvents: isWindowBlurred || screenshotAttempted ? 'auto' : 'none',
-          transition: 'opacity 0.1s ease-out',
-        }}
-        onClick={() => {
-          if (!screenshotAttempted) {
-            setIsWindowBlurred(false);
-          }
-        }}
-        onTouchEnd={() => {
-          if (!screenshotAttempted) {
-            setIsWindowBlurred(false);
-          }
-        }}
-      >
-        {/* Security Warning displayed right on the black screen */}
-        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-white">
+      {/* ══ 1. Solid Blackout Screen (only during real screenshot attempt) ══ */}
+      {screenshotAttempted && (
+        <div className="fixed inset-0 z-[999999] bg-black flex flex-col items-center justify-center p-6 text-center text-white animate-in fade-in duration-75">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-950/90 border border-red-500/60 flex items-center justify-center text-red-400 mb-4 animate-pulse">
             <ShieldAlert className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-serif font-bold text-white mb-2">
+          <h2 className="text-xl sm:text-2xl font-serif font-bold text-white mb-2 tracking-wide">
             ⛔ SCREENSHOT BLOCKED
           </h2>
           <p className="text-red-300 text-xs sm:text-sm max-w-sm mb-4 leading-relaxed px-4">
@@ -356,11 +238,30 @@ export default function SecurityShield({ children }) {
           <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[10px] sm:text-xs font-mono text-[#c9a96e] max-w-[90vw] truncate">
             Session: {studentIdentifier}
           </div>
-          <div className="mt-4 text-[11px] text-[#a09787] bg-black/80 px-4 py-2 rounded-xl border border-white/10">
-            {isMobileOrTablet() ? 'Tap screen to resume platform' : 'Click screen to resume platform'}
+        </div>
+      )}
+
+      {/* ══ 2. App-Switch Privacy Veil (when student leaves tab/browser) ══ */}
+      {isWindowBlurred && !screenshotAttempted && (
+        <div
+          onClick={() => setIsWindowBlurred(false)}
+          onTouchEnd={() => setIsWindowBlurred(false)}
+          className="fixed inset-0 z-[999990] bg-[#0d0b08]/98 backdrop-blur-3xl flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all duration-150"
+        >
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#c9a96e]/15 border border-[#c9a96e]/30 flex items-center justify-center text-[#c9a96e] mb-4">
+            <EyeOff className="w-7 h-7 sm:w-8 sm:h-8" />
+          </div>
+          <h3 className="text-lg sm:text-xl font-serif text-[#f5f0e8] mb-1">
+            Protected Learning Window Paused
+          </h3>
+          <p className="text-xs sm:text-sm text-[#a09787] max-w-sm mb-4 leading-relaxed px-4">
+            Content is hidden while you are away from the platform.
+          </p>
+          <div className="text-[11px] font-mono text-[#c9a96e] bg-black/60 px-4 py-2 rounded-xl border border-[#c9a96e]/30 shadow-lg">
+            Tap anywhere to resume
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Page Content */}
       <div
