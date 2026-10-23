@@ -93,8 +93,11 @@ export default function SecurityShield({ children }) {
       return false;
     };
 
-    // Window focus / blur detection (defeats snipping tool / screen capture overlays)
+    // Window focus / blur detection (defeats snipping tool / screen capture overlays on desktop)
     const handleBlur = () => {
+      // On mobile / tablet touch devices, tapping inputs or virtual keyboard popup causes blur events
+      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      if (isTouch) return;
       setIsWindowBlurred(true);
     };
 

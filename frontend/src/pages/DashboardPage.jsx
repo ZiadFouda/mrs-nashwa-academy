@@ -29,24 +29,24 @@ export default function DashboardPage() {
   const renderStudentView = () => (
     <div className="space-y-8 font-sans">
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-[#1c1611] via-[#241c14] to-[#16120e] border border-[#c9a96e]/30 shadow-2xl backdrop-blur-xl">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-8 bg-gradient-to-r from-[#1c1611] via-[#241c14] to-[#16120e] border border-[#c9a96e]/30 shadow-2xl backdrop-blur-xl">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c9a96e]/15 text-[#d4b87a] text-xs font-semibold mb-3 border border-[#c9a96e]/25">
               <Sparkles className="w-3.5 h-3.5 text-[#c9a96e]" />
               <span>Digital SAT & EST English Preparation Cohort</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-serif text-[#f5f0e8]">
+            <h1 className="text-xl sm:text-3xl font-serif text-[#f5f0e8]">
               Welcome back, {user?.full_name || 'Scholar'}!
             </h1>
-            <p className="text-[#a09787] text-sm mt-1 max-w-xl">
+            <p className="text-[#a09787] text-xs sm:text-sm mt-1 max-w-xl leading-relaxed">
               Target SAT R&W Score: <span className="text-[#c9a96e] font-bold font-mono">760+</span> • Current Diagnostic Average: <span className="text-emerald-400 font-bold font-mono">720</span>. Keep up your daily vocabulary and conventions drills!
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <Link
               to="/assignments"
-              className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#c9a96e] to-[#a8894e] hover:brightness-105 text-[#0d0b08] font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-[#c9a96e]/20 flex items-center gap-2"
+              className="w-full sm:w-auto text-center px-5 py-3 rounded-xl bg-gradient-to-r from-[#c9a96e] to-[#a8894e] hover:brightness-105 text-[#0d0b08] font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-[#c9a96e]/20 flex items-center justify-center gap-2"
             >
               <span>Solve Today's English Drill</span>
               <ArrowRight className="w-4 h-4" />
@@ -55,48 +55,48 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Key Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <div className="flex items-center justify-between text-[#a09787] mb-2">
-            <span className="text-xs font-semibold uppercase">Enrolled Curricula</span>
-            <BookOpen className="w-5 h-5 text-[#c9a96e]" />
+      {/* Key Metric Cards (2 cols on phone, 4 on desktop/laptop) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <div className="flex items-center justify-between text-[#a09787] mb-1.5">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Enrolled Tracks</span>
+            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-[#c9a96e] shrink-0" />
           </div>
-          <div className="text-3xl font-serif text-[#f5f0e8]">2 Active</div>
-          <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> SAT R&W & EST Literacy
+          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8]">2 Active</div>
+          <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 flex items-center gap-1 truncate">
+            <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> SAT R&W & EST
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <div className="flex items-center justify-between text-[#a09787] mb-2">
-            <span className="text-xs font-semibold uppercase">Assignments Due</span>
-            <FileCheck2 className="w-5 h-5 text-[#d4b87a]" />
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <div className="flex items-center justify-between text-[#a09787] mb-1.5">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Assignments Due</span>
+            <FileCheck2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#d4b87a] shrink-0" />
           </div>
-          <div className="text-3xl font-serif text-[#d4b87a]">2 Pending</div>
-          <p className="text-xs text-[#a09787] mt-1 flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-[#c9a96e]" /> Next due in 3 days
+          <div className="text-xl sm:text-3xl font-serif text-[#d4b87a]">2 Pending</div>
+          <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 flex items-center gap-1 truncate">
+            <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#c9a96e]" /> Due in 3 days
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <div className="flex items-center justify-between text-[#a09787] mb-2">
-            <span className="text-xs font-semibold uppercase">English Accuracy</span>
-            <Trophy className="w-5 h-5 text-[#c9a96e]" />
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <div className="flex items-center justify-between text-[#a09787] mb-1.5">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">English Accuracy</span>
+            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-[#c9a96e] shrink-0" />
           </div>
-          <div className="text-3xl font-serif text-emerald-400">92.4%</div>
-          <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> Top 5% in Mrs. Nashwa's Batch
+          <div className="text-xl sm:text-3xl font-serif text-emerald-400">92.4%</div>
+          <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 flex items-center gap-1 truncate">
+            <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Top 5% in Batch
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <div className="flex items-center justify-between text-[#a09787] mb-2">
-            <span className="text-xs font-semibold uppercase">Live Attendance</span>
-            <UserCheck className="w-5 h-5 text-[#d4b87a]" />
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <div className="flex items-center justify-between text-[#a09787] mb-1.5">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Live Attendance</span>
+            <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#d4b87a] shrink-0" />
           </div>
-          <div className="text-3xl font-serif text-[#f5f0e8]">98%</div>
-          <p className="text-xs text-[#a09787] mt-1">12 / 12 Sessions attended</p>
+          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8]">98%</div>
+          <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 truncate">12 / 12 Sessions</p>
         </div>
       </div>
 
@@ -272,38 +272,38 @@ export default function DashboardPage() {
       </div>
 
       {/* Admin stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-xs font-semibold text-[#a09787] uppercase">Total Students</span>
-          <div className="text-3xl font-serif text-[#f5f0e8] mt-1">486</div>
-          <p className="text-xs text-emerald-400 mt-1">+18 enrolled this week</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">Total Students</span>
+          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8] mt-1">486</div>
+          <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 truncate">+18 this week</p>
         </div>
-        <div className="p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-xs font-semibold text-[#a09787] uppercase">Active English Courses</span>
-          <div className="text-3xl font-serif text-[#c9a96e] mt-1">5 Active</div>
-          <p className="text-xs text-[#a09787] mt-1">Grades 10, 11 & 12 (SAT & EST)</p>
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">Active Courses</span>
+          <div className="text-xl sm:text-3xl font-serif text-[#c9a96e] mt-1">5 Active</div>
+          <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 truncate">SAT & EST English</p>
         </div>
-        <div className="p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-xs font-semibold text-[#a09787] uppercase">Monthly Revenue</span>
-          <div className="text-3xl font-serif text-emerald-400 mt-1">720,000 EGP</div>
-          <p className="text-xs text-emerald-400 mt-1">94% collected via InstaPay</p>
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">Monthly Revenue</span>
+          <div className="text-xl sm:text-3xl font-serif text-emerald-400 mt-1">720k EGP</div>
+          <p className="text-[10px] sm:text-xs text-emerald-400 mt-1 truncate">94% via InstaPay</p>
         </div>
-        <div className="p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-xs font-semibold text-[#a09787] uppercase">Pending InstaPay</span>
-          <div className="text-3xl font-serif text-rose-400 mt-1">2 Pending</div>
-          <Link to="/admin/enrollments" className="text-xs text-[#c9a96e] underline mt-1 block">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase truncate block">Pending InstaPay</span>
+          <div className="text-xl sm:text-3xl font-serif text-rose-400 mt-1">2 Pending</div>
+          <Link to="/admin/enrollments" className="text-[10px] sm:text-xs text-[#c9a96e] underline mt-1 block truncate">
             Review receipts →
           </Link>
         </div>
       </div>
 
       {/* Quick shortcuts */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         <Link
           to="/admin/users"
-          className="p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 hover:border-[#c9a96e]/40 transition group shadow-xl"
+          className="p-5 sm:p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 hover:border-[#c9a96e]/40 transition group shadow-xl"
         >
-          <Users className="w-8 h-8 text-[#c9a96e] mb-3 group-hover:scale-105 transition" />
+          <Users className="w-7 h-7 sm:w-8 sm:h-8 text-[#c9a96e] mb-3 group-hover:scale-105 transition" />
           <h3 className="font-serif font-bold text-[#f5f0e8] text-base">User Management</h3>
           <p className="text-xs text-[#a09787] mt-1">
             Manage students, generate parent credentials, link families, and assign roles.
@@ -311,9 +311,9 @@ export default function DashboardPage() {
         </Link>
         <Link
           to="/admin/enrollments"
-          className="p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 hover:border-[#c9a96e]/40 transition group shadow-xl"
+          className="p-5 sm:p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 hover:border-[#c9a96e]/40 transition group shadow-xl"
         >
-          <CreditCard className="w-8 h-8 text-emerald-400 mb-3 group-hover:scale-105 transition" />
+          <CreditCard className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-400 mb-3 group-hover:scale-105 transition" />
           <h3 className="font-serif font-bold text-[#f5f0e8] text-base">Enrollments & InstaPay</h3>
           <p className="text-xs text-[#a09787] mt-1">
             Verify InstaPay reference numbers, manage monthly vs full-course access.
@@ -321,9 +321,9 @@ export default function DashboardPage() {
         </Link>
         <Link
           to="/admin/courses"
-          className="p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 hover:border-[#c9a96e]/40 transition group shadow-xl"
+          className="p-5 sm:p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 hover:border-[#c9a96e]/40 transition group shadow-xl"
         >
-          <BookOpen className="w-8 h-8 text-[#d4b87a] mb-3 group-hover:scale-105 transition" />
+          <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-[#d4b87a] mb-3 group-hover:scale-105 transition" />
           <h3 className="font-serif font-bold text-[#f5f0e8] text-base">Course Catalog</h3>
           <p className="text-xs text-[#a09787] mt-1">
             Configure SAT & EST English modules, DRM lecture videos, and prerequisite chains.
@@ -336,42 +336,42 @@ export default function DashboardPage() {
   // 3. Teacher & Manager Dashboard View
   const renderTeacherManagerView = () => (
     <div className="space-y-8 font-sans">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-serif text-[#f5f0e8]">Academic Instructor Hub</h1>
+          <h1 className="text-2xl sm:text-3xl font-serif text-[#f5f0e8]">Academic Instructor Hub</h1>
           <p className="text-[#a09787] text-xs">Curriculum management & English diagnostics center</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <Link
             to="/manager/upload"
-            className="px-4 py-2 rounded-xl bg-[#18130e] hover:bg-[#221a12] text-[#f5f0e8] border border-[#c9a96e]/30 font-medium text-xs transition flex items-center gap-2"
+            className="flex-1 sm:flex-none justify-center px-4 py-2 rounded-xl bg-[#18130e] hover:bg-[#221a12] text-[#f5f0e8] border border-[#c9a96e]/30 font-medium text-xs transition flex items-center gap-2"
           >
             <Upload className="w-4 h-4 text-[#c9a96e]" />
             <span>Upload Exam Materials</span>
           </Link>
           <Link
             to="/manager/assignments/create"
-            className="px-4 py-2 rounded-xl bg-[#18130e] hover:bg-[#221a12] text-[#c9a96e] border border-[#c9a96e]/50 font-bold text-xs transition shadow-md"
+            className="flex-1 sm:flex-none justify-center px-4 py-2 rounded-xl bg-[#18130e] hover:bg-[#221a12] text-[#c9a96e] border border-[#c9a96e]/50 font-bold text-xs transition shadow-md"
           >
             + Create New Exam / Quiz
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-xs font-semibold text-[#a09787] uppercase">Submissions to Grade</span>
-          <div className="text-3xl font-serif text-[#c9a96e] mt-1">8 Pending</div>
-          <p className="text-xs text-[#a09787] mt-1">Latest from EST English Literacy Mock 1</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+        <div className="p-4 sm:p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase">Submissions to Grade</span>
+          <div className="text-2xl sm:text-3xl font-serif text-[#c9a96e] mt-1">8 Pending</div>
+          <p className="text-xs text-[#a09787] mt-1">EST English Mock 1</p>
         </div>
-        <div className="p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-xs font-semibold text-[#a09787] uppercase">Upcoming Live Classes</span>
-          <div className="text-3xl font-serif text-[#f5f0e8] mt-1">2 This Week</div>
+        <div className="p-4 sm:p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase">Upcoming Live Classes</span>
+          <div className="text-2xl sm:text-3xl font-serif text-[#f5f0e8] mt-1">2 This Week</div>
           <p className="text-xs text-emerald-400 mt-1">Friday 7 PM & Monday 6 PM</p>
         </div>
-        <div className="p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
-          <span className="text-xs font-semibold text-[#a09787] uppercase">Batch Average Score</span>
-          <div className="text-3xl font-serif text-emerald-400 mt-1">745 / 800</div>
+        <div className="p-4 sm:p-6 rounded-2xl bg-[#18130e] border border-[#c9a96e]/20 shadow-xl">
+          <span className="text-[10px] sm:text-xs font-semibold text-[#a09787] uppercase">Batch Average Score</span>
+          <div className="text-2xl sm:text-3xl font-serif text-emerald-400 mt-1">745 / 800</div>
           <p className="text-xs text-emerald-400 mt-1">+35 pts above target</p>
         </div>
       </div>

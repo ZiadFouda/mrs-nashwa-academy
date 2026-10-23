@@ -115,25 +115,25 @@ export default function HomePage() {
       <Background3D />
 
       {/* Navigation Bar */}
-      <nav className="relative z-30 max-w-7xl mx-auto px-6 h-24 flex items-center justify-between border-b border-[#c9a96e]/10">
-        <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#c9a96e] via-[#d4b87a] to-[#a8894e] flex items-center justify-center text-[#0d0b08] font-black shadow-lg shadow-[#c9a96e]/20">
-            <GraduationCap className="w-6 h-6 text-[#0d0b08]" />
+      <nav className="relative z-30 max-w-7xl mx-auto px-4 sm:px-6 h-18 sm:h-22 flex items-center justify-between border-b border-[#c9a96e]/10">
+        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[#c9a96e] via-[#d4b87a] to-[#a8894e] flex items-center justify-center text-[#0d0b08] font-black shadow-lg shadow-[#c9a96e]/20 shrink-0">
+            <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-[#0d0b08]" />
           </div>
-          <div>
-            <span className="font-serif font-bold text-lg sm:text-xl tracking-tight gold-gradient-text block">
+          <div className="min-w-0">
+            <span className="font-serif font-bold text-base sm:text-xl tracking-tight gold-gradient-text block truncate">
               Mrs. Nashwa Abdelhalim
             </span>
-            <span className="text-[10px] text-[#a09787] uppercase tracking-widest font-sans font-semibold">
+            <span className="text-[9px] sm:text-[10px] text-[#a09787] uppercase tracking-widest font-sans font-semibold block truncate">
               English • SAT & EST Preparation
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3.5 font-sans">
+        <div className="flex items-center gap-2.5 sm:gap-3.5 font-sans shrink-0">
           <Link
             to="/login"
-            className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[#f5f0e8] text-xs sm:text-sm font-medium border border-[#c9a96e]/20 transition backdrop-blur-md"
+            className="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[#f5f0e8] text-xs sm:text-sm font-medium border border-[#c9a96e]/20 transition backdrop-blur-md"
           >
             Student Portal
           </Link>
@@ -148,62 +148,62 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative z-20 pt-16 pb-24 px-6 max-w-6xl mx-auto text-center">
+      <section className="relative z-20 pt-10 sm:pt-16 pb-16 sm:pb-24 px-4 sm:px-6 max-w-6xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1c1611]/80 border border-[#c9a96e]/30 text-[#d4b87a] text-xs font-sans font-medium mb-8 backdrop-blur-md shadow-inner">
-            <Sparkles className="w-4 h-4 text-[#c9a96e]" />
-            <span>Egypt’s Premier SAT & EST English Academy for American Diploma</span>
+          <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-[#1c1611]/80 border border-[#c9a96e]/30 text-[#d4b87a] text-[11px] sm:text-xs font-sans font-medium mb-6 sm:mb-8 backdrop-blur-md shadow-inner max-w-full">
+            <Sparkles className="w-3.5 h-3.5 text-[#c9a96e] shrink-0" />
+            <span className="truncate">Egypt’s Premier SAT & EST English Academy for American Diploma</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif font-normal text-[#f5f0e8] tracking-tight leading-[1.15] mb-8">
+          <h1 className="text-3xl sm:text-5xl lg:text-7xl font-serif font-normal text-[#f5f0e8] tracking-tight leading-[1.18] mb-6 sm:mb-8">
             Master SAT & EST English with{' '}
             <span className="gold-gradient-text italic font-serif">Mrs. Nashwa Abdelhalim</span>
           </h1>
 
-          <p className="max-w-3xl mx-auto text-[#b8afa2] text-base sm:text-lg font-sans font-normal leading-relaxed mb-12">
+          <p className="max-w-3xl mx-auto text-[#b8afa2] text-sm sm:text-base lg:text-lg font-sans font-normal leading-relaxed mb-8 sm:mb-12">
             A proven, results-driven educational platform engineered exclusively for Grade 10, 11, and 12 American Diploma scholars targeting 750+ in SAT Reading & Writing and top percentiles in EST Literacy.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 font-sans">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 font-sans">
             <Link
               to="/login"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-[#c9a96e] via-[#d4b87a] to-[#a8894e] text-[#0d0b08] font-bold text-sm sm:text-base shadow-xl shadow-[#c9a96e]/20 hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-[#c9a96e] via-[#d4b87a] to-[#a8894e] text-[#0d0b08] font-bold text-sm sm:text-base shadow-xl shadow-[#c9a96e]/20 hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2"
             >
               <span>Access Student Portal</span>
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
 
             <a
               href="#grades"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#1a1510]/80 hover:bg-[#251e17] text-[#f5f0e8] font-medium text-sm sm:text-base border border-[#c9a96e]/25 backdrop-blur-md transition flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-[#1a1510]/80 hover:bg-[#251e17] text-[#f5f0e8] font-medium text-sm sm:text-base border border-[#c9a96e]/25 backdrop-blur-md transition flex items-center justify-center gap-2"
             >
-              <Compass className="w-5 h-5 text-[#c9a96e]" />
+              <Compass className="w-4 h-4 sm:w-5 sm:h-5 text-[#c9a96e]" />
               <span>Explore Grade Curricula</span>
             </a>
           </div>
 
-          {/* Quick Metrics Bar */}
-          <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 p-6 sm:p-8 rounded-2xl bg-[#14100c]/85 border border-[#c9a96e]/20 backdrop-blur-xl shadow-2xl">
-            <div className="border-r border-[#c9a96e]/10 last:border-r-0">
-              <div className="text-3xl sm:text-4xl font-serif text-[#c9a96e]">1,500+</div>
-              <div className="text-[11px] text-[#a09787] mt-1.5 uppercase font-sans font-semibold tracking-wider">Active Scholars</div>
+          {/* Quick Metrics Bar (Fluid Responsive Grid across Mobile, iPad & Desktop) */}
+          <div className="mt-12 sm:mt-20 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6 rounded-2xl bg-[#14100c]/85 border border-[#c9a96e]/20 backdrop-blur-xl shadow-2xl">
+            <div className="p-3 sm:p-4 rounded-xl bg-[#18130e]/70 border border-[#c9a96e]/10 text-center">
+              <div className="text-2xl sm:text-4xl font-serif text-[#c9a96e]">1,500+</div>
+              <div className="text-[10px] sm:text-[11px] text-[#a09787] mt-1 uppercase font-sans font-semibold tracking-wider">Active Scholars</div>
             </div>
-            <div className="border-r border-[#c9a96e]/10 last:border-r-0">
-              <div className="text-3xl sm:text-4xl font-serif text-[#f5f0e8]">99.4%</div>
-              <div className="text-[11px] text-[#a09787] mt-1.5 uppercase font-sans font-semibold tracking-wider">Score Improvement</div>
+            <div className="p-3 sm:p-4 rounded-xl bg-[#18130e]/70 border border-[#c9a96e]/10 text-center">
+              <div className="text-2xl sm:text-4xl font-serif text-[#f5f0e8]">99.4%</div>
+              <div className="text-[10px] sm:text-[11px] text-[#a09787] mt-1 uppercase font-sans font-semibold tracking-wider">Score Improvement</div>
             </div>
-            <div className="border-r border-[#c9a96e]/10 last:border-r-0">
-              <div className="text-3xl sm:text-4xl font-serif text-[#c9a96e]">740+</div>
-              <div className="text-[11px] text-[#a09787] mt-1.5 uppercase font-sans font-semibold tracking-wider">Average SAT R&W Score</div>
+            <div className="p-3 sm:p-4 rounded-xl bg-[#18130e]/70 border border-[#c9a96e]/10 text-center">
+              <div className="text-2xl sm:text-4xl font-serif text-[#c9a96e]">740+</div>
+              <div className="text-[10px] sm:text-[11px] text-[#a09787] mt-1 uppercase font-sans font-semibold tracking-wider">Avg SAT R&W Score</div>
             </div>
-            <div>
-              <div className="text-3xl sm:text-4xl font-serif text-[#f5f0e8]">15+ Yrs</div>
-              <div className="text-[11px] text-[#a09787] mt-1.5 uppercase font-sans font-semibold tracking-wider">American Diploma Experience</div>
+            <div className="p-3 sm:p-4 rounded-xl bg-[#18130e]/70 border border-[#c9a96e]/10 text-center">
+              <div className="text-2xl sm:text-4xl font-serif text-[#f5f0e8]">15+ Yrs</div>
+              <div className="text-[10px] sm:text-[11px] text-[#a09787] mt-1 uppercase font-sans font-semibold tracking-wider">American Diploma Exp</div>
             </div>
           </div>
         </motion.div>
@@ -223,12 +223,12 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {grades.map((item, idx) => (
             <motion.div
               key={idx}
               whileHover={{ y: -6 }}
-              className="p-8 rounded-2xl bg-[#14100c]/90 border border-[#c9a96e]/20 hover:border-[#c9a96e]/50 backdrop-blur-xl shadow-xl flex flex-col justify-between transition-all duration-300"
+              className="p-6 sm:p-8 rounded-2xl bg-[#14100c]/90 border border-[#c9a96e]/20 hover:border-[#c9a96e]/50 backdrop-blur-xl shadow-xl flex flex-col justify-between transition-all duration-300"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
@@ -261,23 +261,23 @@ export default function HomePage() {
       </section>
 
       {/* Features Grid */}
-      <section className="relative z-20 py-24 px-6 max-w-7xl mx-auto border-t border-[#c9a96e]/10">
-        <div className="text-center mb-16">
+      <section className="relative z-20 py-16 sm:py-24 px-4 sm:px-6 max-w-7xl mx-auto border-t border-[#c9a96e]/10">
+        <div className="text-center mb-12 sm:mb-16">
           <span className="text-xs font-sans font-bold text-[#c9a96e] uppercase tracking-widest block mb-2">
             Engineered For Excellence
           </span>
-          <h2 className="text-3xl sm:text-4xl font-serif text-[#f5f0e8]">
+          <h2 className="text-2xl sm:text-4xl font-serif text-[#f5f0e8]">
             Everything You Need to Ace SAT & EST English
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 font-sans">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 font-sans">
           {features.map((feat, idx) => {
             const Icon = feat.icon;
             return (
               <div
                 key={idx}
-                className="p-7 rounded-2xl bg-[#14100c]/70 border border-[#c9a96e]/15 hover:border-[#c9a96e]/40 transition backdrop-blur-md"
+                className="p-5 sm:p-7 rounded-2xl bg-[#14100c]/70 border border-[#c9a96e]/15 hover:border-[#c9a96e]/40 transition backdrop-blur-md"
               >
                 <div className="w-12 h-12 rounded-xl bg-[#241c14] border border-[#c9a96e]/30 flex items-center justify-center text-[#c9a96e] mb-5">
                   <Icon className="w-6 h-6" />
@@ -291,24 +291,24 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section className="relative z-20 py-24 px-6 max-w-7xl mx-auto border-t border-[#c9a96e]/10">
-        <div className="text-center mb-16">
+      <section className="relative z-20 py-16 sm:py-24 px-4 sm:px-6 max-w-7xl mx-auto border-t border-[#c9a96e]/10">
+        <div className="text-center mb-12 sm:mb-16">
           <span className="text-xs font-sans font-bold text-[#c9a96e] uppercase tracking-widest block mb-2">
             Proven Results
           </span>
-          <h2 className="text-3xl sm:text-4xl font-serif text-[#f5f0e8]">
+          <h2 className="text-2xl sm:text-4xl font-serif text-[#f5f0e8]">
             Hear From Our Scholars and Parents
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 font-sans">
           {testimonials.map((t, idx) => (
             <div
               key={idx}
-              className="p-7 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15 backdrop-blur-lg flex flex-col justify-between"
+              className="p-5 sm:p-7 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15 backdrop-blur-lg flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-center gap-1 text-[#c9a96e] mb-5">
+                <div className="flex items-center gap-1 text-[#c9a96e] mb-4 sm:mb-5">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-4 h-4 fill-[#c9a96e]" />
                   ))}
@@ -318,11 +318,11 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3.5 pt-5 border-t border-[#c9a96e]/15">
+              <div className="flex items-center gap-3.5 pt-4 sm:pt-5 border-t border-[#c9a96e]/15">
                 <img
                   src={t.avatar}
                   alt={t.name}
-                  className="w-11 h-11 rounded-full object-cover border border-[#c9a96e]/40"
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border border-[#c9a96e]/40"
                 />
                 <div>
                   <h4 className="font-semibold text-[#f5f0e8] text-xs">{t.name}</h4>
@@ -336,18 +336,18 @@ export default function HomePage() {
       </section>
 
       {/* Call to Action Banner */}
-      <section className="relative z-20 py-20 px-6 max-w-5xl mx-auto text-center font-sans">
-        <div className="p-10 sm:p-14 rounded-3xl bg-gradient-to-b from-[#1c1611] to-[#120e0a] border border-[#c9a96e]/30 shadow-2xl backdrop-blur-2xl">
-          <h2 className="text-3xl sm:text-4xl font-serif text-[#f5f0e8] mb-4">
+      <section className="relative z-20 py-14 sm:py-20 px-4 sm:px-6 max-w-5xl mx-auto text-center font-sans">
+        <div className="p-6 sm:p-10 lg:p-14 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-[#1c1611] to-[#120e0a] border border-[#c9a96e]/30 shadow-2xl backdrop-blur-2xl">
+          <h2 className="text-2xl sm:text-4xl font-serif text-[#f5f0e8] mb-4">
             Ready to Achieve Your Dream Score?
           </h2>
-          <p className="text-[#b8afa2] text-sm sm:text-base max-w-2xl mx-auto mb-8 font-light">
+          <p className="text-[#b8afa2] text-xs sm:text-base max-w-2xl mx-auto mb-6 sm:mb-8 font-light">
             Join Mrs. Nashwa Abdelhalim's official SAT & EST English preparation cohorts today. Monthly and full-course enrollment options available with InstaPay.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <Link
               to="/login"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#c9a96e] via-[#d4b87a] to-[#a8894e] text-[#0d0b08] font-bold text-sm shadow-xl shadow-[#c9a96e]/20 transition transform active:scale-95 hover:brightness-105"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#c9a96e] via-[#d4b87a] to-[#a8894e] text-[#0d0b08] font-bold text-xs sm:text-sm shadow-xl shadow-[#c9a96e]/20 transition transform active:scale-95 hover:brightness-105"
             >
               Sign In to Your Dashboard
             </Link>
@@ -355,7 +355,7 @@ export default function HomePage() {
               href="https://wa.me/201000000000"
               target="_blank"
               rel="noreferrer"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 text-[#f5f0e8] font-semibold text-sm border border-[#c9a96e]/25 transition flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 text-[#f5f0e8] font-semibold text-xs sm:text-sm border border-[#c9a96e]/25 transition flex items-center justify-center gap-2"
             >
               <PhoneCall className="w-4 h-4 text-[#c9a96e]" />
               <span>Contact Admissions on WhatsApp</span>
@@ -365,8 +365,8 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-20 border-t border-[#c9a96e]/15 py-10 px-6 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#a09787] font-sans">
-        <div className="flex items-center gap-2.5">
+      <footer className="relative z-20 border-t border-[#c9a96e]/15 py-8 sm:py-10 px-4 sm:px-6 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#a09787] font-sans text-center sm:text-left">
+        <div className="flex items-center gap-2.5 justify-center sm:justify-start">
           <GraduationCap className="w-5 h-5 text-[#c9a96e]" />
           <span className="font-serif font-bold text-[#f5f0e8]">Mrs. Nashwa Abdelhalim Academy</span>
         </div>

@@ -77,7 +77,7 @@ export default function LoginPage() {
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className="relative z-10 w-full max-w-md font-sans"
       >
-        <div className="rounded-3xl p-8 sm:p-10 bg-[#14100c]/90 backdrop-blur-2xl border border-[#c9a96e]/20 shadow-2xl shadow-black/80">
+        <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-10 bg-[#14100c]/90 backdrop-blur-2xl border border-[#c9a96e]/20 shadow-2xl shadow-black/80">
           {/* Header & Logo */}
           <div className="text-center mb-8">
             <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-[#c9a96e] via-[#d4b87a] to-[#a8894e] text-[#0d0b08] shadow-lg shadow-[#c9a96e]/20 mb-3">

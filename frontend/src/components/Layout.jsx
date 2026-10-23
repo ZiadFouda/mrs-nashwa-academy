@@ -27,10 +27,25 @@ export default function Layout({ children }) {
   const { user, logout, switchDemoRole } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
+  );
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  // Auto-collapse sidebar on iPad portrait & smaller screens (< 1024px)
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Role based navigation links
   const getNavItems = () => {
@@ -113,16 +128,17 @@ export default function Layout({ children }) {
             <Menu className="w-5 h-5" />
           </button>
 
-          <Link to="/dashboard" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#c9a96e] via-[#d4b87a] to-[#a8894e] flex items-center justify-center text-[#0d0b08] shadow-md shadow-[#c9a96e]/20">
-              <GraduationCap className="w-5 h-5 text-[#0d0b08]" />
+          <Link to="/dashboard" className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-[#c9a96e] via-[#d4b87a] to-[#a8894e] flex items-center justify-center text-[#0d0b08] shadow-md shadow-[#c9a96e]/20 shrink-0">
+              <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-[#0d0b08]" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-serif font-bold text-sm sm:text-base tracking-tight gold-gradient-text leading-tight">
-                Mrs. Nashwa Abdelhalim
+            <div className="flex flex-col min-w-0">
+              <span className="font-serif font-bold text-xs sm:text-base tracking-tight gold-gradient-text leading-tight truncate">
+                <span className="sm:hidden">Mrs. Nashwa</span>
+                <span className="hidden sm:inline">Mrs. Nashwa Abdelhalim</span>
               </span>
-              <span className="text-[10px] text-[#a09787] uppercase tracking-wider font-semibold">
-                English • SAT & EST Prep
+              <span className="text-[9px] sm:text-[10px] text-[#a09787] uppercase tracking-wider font-semibold truncate">
+                English • SAT & EST
               </span>
             </div>
           </Link>
@@ -355,16 +371,16 @@ export default function Layout({ children }) {
 
         {/* Page Content Container */}
         <main className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[#0d0b08]/80 backdrop-blur-xs relative z-10">
-          <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+          <div className="flex-1 p-3.5 sm:p-6 lg:p-8 pb-24 md:pb-8 max-w-7xl w-full mx-auto">
             {children}
           </div>
 
           {/* Footer */}
-          <footer className="border-t border-[#c9a96e]/10 py-6 px-6 text-center text-xs text-[#7d7465] flex flex-col sm:flex-row items-center justify-between gap-3 max-w-7xl w-full mx-auto">
+          <footer className="border-t border-[#c9a96e]/10 py-6 px-4 sm:px-6 text-center text-xs text-[#7d7465] flex flex-col sm:flex-row items-center justify-between gap-3 max-w-7xl w-full mx-auto">
             <p>
               © {new Date().getFullYear()} Mrs. Nashwa Abdelhalim English Educational Platform.
             </p>
-            <div className="flex items-center gap-4 text-[#a09787]">
+            <div className="flex items-center gap-4 text-[#a09787] flex-wrap justify-center">
               <span className="hover:text-[#c9a96e] cursor-pointer">SAT & EST Standards</span>
               <span>•</span>
               <span className="hover:text-[#c9a96e] cursor-pointer">Academic Integrity</span>
@@ -374,6 +390,54 @@ export default function Layout({ children }) {
           </footer>
         </main>
       </div>
+
+      {/* Modern Mobile Bottom Navigation Bar (Phones & Small Tablets < 768px) */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#14100c]/95 border-t border-[#c9a96e]/20 backdrop-blur-xl px-2 py-1.5 flex items-center justify-around shadow-2xl">
+        <Link
+          to="/dashboard"
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
+            location.pathname === '/dashboard' ? 'text-[#c9a96e] font-bold' : 'text-[#a09787] hover:text-[#f5f0e8]'
+          }`}
+        >
+          <LayoutDashboard className="w-5 h-5" />
+          <span className="text-[10px]">Dashboard</span>
+        </Link>
+        <Link
+          to="/courses"
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
+            location.pathname.startsWith('/courses') ? 'text-[#c9a96e] font-bold' : 'text-[#a09787] hover:text-[#f5f0e8]'
+          }`}
+        >
+          <BookOpen className="w-5 h-5" />
+          <span className="text-[10px]">Courses</span>
+        </Link>
+        <Link
+          to="/assignments"
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
+            location.pathname.startsWith('/assignments') ? 'text-[#c9a96e] font-bold' : 'text-[#a09787] hover:text-[#f5f0e8]'
+          }`}
+        >
+          <FileCheck2 className="w-5 h-5" />
+          <span className="text-[10px]">Exams</span>
+        </Link>
+        <Link
+          to="/analytics"
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
+            location.pathname === '/analytics' ? 'text-[#c9a96e] font-bold' : 'text-[#a09787] hover:text-[#f5f0e8]'
+          }`}
+        >
+          <BarChart3 className="w-5 h-5" />
+          <span className="text-[10px]">Analytics</span>
+        </Link>
+        <button
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[#a09787] hover:text-[#f5f0e8] transition"
+          aria-label="Open Navigation Menu"
+        >
+          <Menu className="w-5 h-5 text-[#c9a96e]" />
+          <span className="text-[10px]">Menu</span>
+        </button>
+      </nav>
     </div>
     </SecurityShield>
   );

@@ -84,16 +84,16 @@ export default function ParentDashboard() {
       </div>
 
       {/* Child Selector Tabs */}
-      <div className="flex items-center gap-4 border-b border-[#c9a96e]/15 pb-4">
-        <span className="text-xs text-[#a09787] font-semibold uppercase tracking-wider">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 border-b border-[#c9a96e]/15 pb-4 overflow-x-auto">
+        <span className="text-xs text-[#a09787] font-semibold uppercase tracking-wider shrink-0">
           Supervised Scholars:
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
           {linkedChildren.map((child) => (
             <button
               key={child.id}
               onClick={() => setSelectedChildId(child.id)}
-              className={`flex items-center gap-2.5 px-4 py-2 rounded-xl text-xs font-bold transition ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition shrink-0 ${
                 selectedChildId === child.id
                   ? 'bg-[#241c14] text-[#d4b87a] border border-[#c9a96e]/40 shadow-lg'
                   : 'bg-[#14100c] text-[#a09787] border border-[#c9a96e]/10 hover:text-[#f5f0e8]'
@@ -102,7 +102,7 @@ export default function ParentDashboard() {
               <img
                 src={child.avatar}
                 alt={child.full_name}
-                className="w-6 h-6 rounded-full object-cover border border-[#c9a96e]/30"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-[#c9a96e]/30"
               />
               <span>{child.full_name}</span>
               <span className="text-[10px] opacity-70">({child.grade})</span>
@@ -111,23 +111,23 @@ export default function ParentDashboard() {
         </div>
       </div>
 
-      {/* Selected Child Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15">
-          <div className="flex items-center justify-between text-[#a09787] mb-2">
-            <span className="text-xs font-semibold uppercase">Average Diagnostic</span>
-            <TrendingUp className="w-5 h-5 text-emerald-400" />
+      {/* Selected Child Metric Cards (2 cols on phone, 4 on desktop/laptop) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15">
+          <div className="flex items-center justify-between text-[#a09787] mb-1.5">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Avg Diagnostic</span>
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0" />
           </div>
-          <div className="text-3xl font-serif text-emerald-400">{currentChild.avg_score}</div>
-          <p className="text-xs text-[#a09787] mt-1">Based on latest 8 SAT/EST mocks</p>
+          <div className="text-xl sm:text-3xl font-serif text-emerald-400">{currentChild.avg_score}</div>
+          <p className="text-[10px] sm:text-xs text-[#a09787] mt-1 truncate">8 SAT/EST mocks</p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15">
-          <div className="flex items-center justify-between text-[#a09787] mb-2">
-            <span className="text-xs font-semibold uppercase">Lecture Attendance</span>
-            <UserCheck className="w-5 h-5 text-[#c9a96e]" />
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-[#14100c]/80 border border-[#c9a96e]/15">
+          <div className="flex items-center justify-between text-[#a09787] mb-1.5">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Attendance</span>
+            <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#c9a96e] shrink-0" />
           </div>
-          <div className="text-3xl font-serif text-[#f5f0e8]">{currentChild.attendance}</div>
+          <div className="text-xl sm:text-3xl font-serif text-[#f5f0e8]">{currentChild.attendance}</div>
           <p className="text-xs text-emerald-400 mt-1">Zero unexcused absences</p>
         </div>
 

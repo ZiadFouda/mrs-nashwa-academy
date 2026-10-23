@@ -95,31 +95,31 @@ export default function TakeAssignmentPage() {
   const answeredCount = Object.keys(answers).length;
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto select-none protected-content font-sans">
+    <div className="space-y-4 sm:space-y-6 max-w-6xl mx-auto select-none protected-content font-sans">
       {/* Top Testing Header Bar */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-[#14100c]/95 border border-[#c9a96e]/20 shadow-xl backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-4 sticky top-16 z-30">
-        <div>
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[#c9a96e] font-bold block">
-            Timed Digital SAT / EST English Simulation
+      <div className="p-3 sm:p-5 rounded-2xl bg-[#14100c]/95 border border-[#c9a96e]/20 shadow-xl backdrop-blur-xl flex items-center justify-between gap-3 sticky top-16 z-30">
+        <div className="min-w-0">
+          <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-[#c9a96e] font-bold block truncate">
+            SAT / EST Simulation
           </span>
-          <h1 className="text-base sm:text-lg font-serif font-bold text-[#f5f0e8] truncate max-w-md">
+          <h1 className="text-sm sm:text-lg font-serif font-bold text-[#f5f0e8] truncate max-w-xs sm:max-w-md">
             {assignment.title}
           </h1>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Security Tab switch counter */}
           {tabSwitches > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-300 text-xs font-mono font-bold">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-300 text-xs font-mono font-bold">
               <ShieldAlert className="w-4 h-4 text-rose-400 animate-pulse" />
-              <span>Tab Violations: {tabSwitches}/3</span>
+              <span>Violations: {tabSwitches}/3</span>
             </div>
           )}
 
           {/* Fullscreen Button */}
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-xl bg-[#1c1611] hover:bg-[#282018] border border-[#c9a96e]/20 text-[#a09787] hover:text-[#f5f0e8] transition"
+            className="p-1.5 sm:p-2 rounded-xl bg-[#1c1611] hover:bg-[#282018] border border-[#c9a96e]/20 text-[#a09787] hover:text-[#f5f0e8] transition"
             title="Toggle Fullscreen"
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -137,32 +137,57 @@ export default function TakeAssignmentPage() {
       </div>
 
       {/* Main Examination Grid: Question on left, Palette on right */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Question Area (3 Cols) */}
-        <div className="lg:col-span-3 space-y-5">
-          <div className="p-6 sm:p-8 rounded-2xl bg-[#14100c]/90 border border-[#c9a96e]/20 shadow-2xl backdrop-blur-xl min-h-[460px] flex flex-col justify-between">
+        <div className="lg:col-span-3 space-y-4 sm:space-y-5">
+          <div className="p-4 sm:p-8 rounded-2xl bg-[#14100c]/90 border border-[#c9a96e]/20 shadow-2xl backdrop-blur-xl min-h-[380px] sm:min-h-[460px] flex flex-col justify-between">
+            {/* Quick Horizontal Question Navigator for Mobile & iPad */}
+            <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto pb-3 mb-3 border-b border-[#c9a96e]/15">
+              {questions.map((q, idx) => {
+                const isAnswered = !!answers[q.id];
+                const isCurrent = idx === currentIndex;
+                const isFlagged = !!flagged[idx];
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-mono text-xs font-bold shrink-0 relative transition ${
+                      isCurrent
+                        ? 'ring-2 ring-[#c9a96e] text-[#0d0b08] bg-[#c9a96e]'
+                        : isAnswered
+                        ? 'bg-[#241c14] text-[#d4b87a] border border-[#c9a96e]/40'
+                        : 'bg-[#1c1611] text-[#a09787] border border-[#c9a96e]/10'
+                    }`}
+                  >
+                    <span>{idx + 1}</span>
+                    {isFlagged && <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-[#c9a96e]" />}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Question Top Info */}
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-[#c9a96e]/15 mb-6">
+              <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-[#c9a96e]/15 mb-4 sm:mb-6">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-mono font-bold text-[#c9a96e] uppercase tracking-wider">
                     Question {currentIndex + 1} of {questions.length}
                   </span>
-                  <span className="text-xs text-[#a09787] font-medium">
+                  <span className="text-[11px] text-[#a09787] font-medium hidden sm:inline">
                     ({currentQ.type.toUpperCase()})
                   </span>
                 </div>
 
                 <button
                   onClick={() => toggleFlag(currentIndex)}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium transition ${
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-xs font-medium transition ${
                     flagged[currentIndex]
                       ? 'bg-[#282018] text-[#d4b87a] border border-[#c9a96e]/40'
                       : 'text-[#a09787] hover:text-[#f5f0e8] hover:bg-white/5'
                   }`}
                 >
                   <Bookmark className={`w-3.5 h-3.5 ${flagged[currentIndex] ? 'fill-[#c9a96e] text-[#c9a96e]' : ''}`} />
-                  <span>{flagged[currentIndex] ? 'Flagged for Review' : 'Mark for Review'}</span>
+                  <span>{flagged[currentIndex] ? 'Flagged' : 'Mark'}</span>
                 </button>
               </div>
 

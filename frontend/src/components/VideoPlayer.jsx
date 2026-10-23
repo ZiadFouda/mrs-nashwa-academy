@@ -31,9 +31,14 @@ export default function VideoPlayer({
     return () => clearInterval(interval);
   }, []);
 
-  // Basic DevTools inspection heuristic
+  // Basic DevTools inspection heuristic (desktop only)
   useEffect(() => {
     const checkDevTools = () => {
+      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      if (isTouch) {
+        setDevToolsOpen(false);
+        return;
+      }
       const threshold = 160;
       const widthDiff = window.outerWidth - window.innerWidth > threshold;
       const heightDiff = window.outerHeight - window.innerHeight > threshold;

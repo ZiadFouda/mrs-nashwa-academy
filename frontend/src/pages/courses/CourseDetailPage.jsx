@@ -69,11 +69,11 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
-      {/* Course Navigation Tabs */}
-      <div className="flex border-b border-[#c9a96e]/15 gap-4">
+      {/* Course Navigation Tabs (Scrollable on small mobile screens) */}
+      <div className="flex border-b border-[#c9a96e]/15 gap-2 sm:gap-4 overflow-x-auto pb-0.5 whitespace-nowrap">
         <button
           onClick={() => setActiveTab('lessons')}
-          className={`pb-3 px-2 text-xs sm:text-sm font-semibold transition relative ${
+          className={`pb-3 px-2 text-xs sm:text-sm font-semibold transition relative shrink-0 ${
             activeTab === 'lessons'
               ? 'text-[#c9a96e]'
               : 'text-[#a09787] hover:text-[#f5f0e8]'
@@ -87,7 +87,7 @@ export default function CourseDetailPage() {
 
         <button
           onClick={() => setActiveTab('assignments')}
-          className={`pb-3 px-2 text-xs sm:text-sm font-semibold transition relative ${
+          className={`pb-3 px-2 text-xs sm:text-sm font-semibold transition relative shrink-0 ${
             activeTab === 'assignments'
               ? 'text-[#c9a96e]'
               : 'text-[#a09787] hover:text-[#f5f0e8]'
@@ -101,7 +101,7 @@ export default function CourseDetailPage() {
 
         <button
           onClick={() => setActiveTab('materials')}
-          className={`pb-3 px-2 text-xs sm:text-sm font-semibold transition relative ${
+          className={`pb-3 px-2 text-xs sm:text-sm font-semibold transition relative shrink-0 ${
             activeTab === 'materials'
               ? 'text-[#c9a96e]'
               : 'text-[#a09787] hover:text-[#f5f0e8]'
