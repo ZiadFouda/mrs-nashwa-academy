@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../utils/api';
 import platformDb from '../utils/platformDb';
+import { getDeviceFingerprint } from '../utils/deviceFingerprint';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
@@ -9,6 +10,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [loading, setLoading] = useState(true);
+  const [siteSettings, setSiteSettings] = useState(() => platformDb.getSiteSettings());
+
+  // Subscribe to live site settings changes across all tabs
+  useEffect(() => {
+    const unsub = platformDb.onSiteSettingsChange((newSettings) => {
+      setSiteSettings(newSettings);
+    });
+    return () => unsub();
+  }, []);
 
   // Initialize auth state
   useEffect(() => {
@@ -22,6 +32,13 @@ export const AuthProvider = ({ children }) => {
           setUser(parsedUser);
           setToken(storedToken);
 
+          // Verify with platformDb to ensure permissions/locks haven't changed
+          const freshUser = platformDb.getUserById(parsedUser.id);
+          if (freshUser) {
+            setUser(freshUser);
+            localStorage.setItem('user', JSON.stringify(freshUser));
+          }
+
           // Attempt to verify with backend if running locally
           try {
             const res = await api.get('/auth/me');
@@ -30,7 +47,7 @@ export const AuthProvider = ({ children }) => {
               localStorage.setItem('user', JSON.stringify(res.data.user));
             }
           } catch (err) {
-            // Running in client persistent database mode (e.g. GitHub Pages)
+            // Running in client persistent database mode
           }
         } catch (err) {
           console.error('Failed to parse cached user:', err);
@@ -40,7 +57,6 @@ export const AuthProvider = ({ children }) => {
           setToken(null);
         }
       } else {
-        // No auto-login: user must write their credentials manually
         setUser(null);
         setToken(null);
       }
@@ -50,13 +66,19 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  // Standard Login (Validates against real platform database)
+  // Standard Login with Device & Browser Lockdown Enforcement
   const login = async (username, password, rememberMe = true) => {
     setLoading(true);
+    const currentDevice = getDeviceFingerprint();
+
     try {
       // 1. First try live backend API if available
       try {
-        const response = await api.post('/auth/login', { username, password });
+        const response = await api.post('/auth/login', {
+          username,
+          password,
+          device: currentDevice,
+        });
         const { user: apiUser, token: apiToken } = response.data;
         setUser(apiUser);
         setToken(apiToken);
@@ -68,8 +90,8 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
         return { success: true, user: apiUser };
       } catch (apiError) {
-        // 2. Validate against real persistent Platform Database
-        const authenticatedUser = platformDb.authenticateUser(username, password);
+        // 2. Validate against real persistent Platform Database with single-device checking
+        const authenticatedUser = platformDb.authenticateUser(username, password, currentDevice);
         const realToken = `jwt-token-${authenticatedUser.id}-${Date.now()}`;
 
         setUser(authenticatedUser);
@@ -89,7 +111,13 @@ export const AuthProvider = ({ children }) => {
         err.response?.data?.message ||
         err.message ||
         'Login failed. Please check your username and password.';
-      toast.error(errorMessage);
+      
+      if (errorMessage.includes('DEVICE_LOCK_ERROR')) {
+        toast.error('Device Lock Alert: This account is restricted to 1 device.', { duration: 6000 });
+      } else {
+        toast.error(errorMessage);
+      }
+
       setLoading(false);
       return { success: false, error: errorMessage };
     }
@@ -132,6 +160,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateSiteSettings = (newSettings) => {
+    const updated = platformDb.saveSiteSettings(newSettings);
+    setSiteSettings(updated);
+    toast.success('Platform settings updated live for all users!');
+    return updated;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -143,6 +178,8 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         updateUser,
+        siteSettings,
+        updateSiteSettings,
       }}
     >
       {children}

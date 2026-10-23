@@ -20,13 +20,15 @@ import {
   ShieldCheck,
   UserCheck,
   RotateCcw,
+  Smartphone,
+  Sliders,
 } from 'lucide-react';
 import SecurityShield from './SecurityShield';
 import Background3D from './Background3D';
 import SystemRestartModal from './SystemRestartModal';
 
 export default function Layout({ children }) {
-  const { user, logout } = useAuth();
+  const { user, logout, siteSettings } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
@@ -58,14 +60,17 @@ export default function Layout({ children }) {
         return [
           { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
           { name: 'User Management', path: '/admin/users', icon: Users },
+          { name: 'Students & Devices', path: '/manager/students', icon: Smartphone },
           { name: 'Course Management', path: '/admin/courses', icon: BookOpen },
           { name: 'Enrollment & Fees', path: '/admin/enrollments', icon: CreditCard },
+          { name: 'Live Site Editor', path: '/admin/site-settings', icon: Sliders },
           { name: 'Student Analytics', path: '/analytics', icon: BarChart3 },
           { name: 'Materials Upload', path: '/manager/upload', icon: Upload },
         ];
       case 'manager':
         return [
           { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+          { name: 'Students & Devices', path: '/manager/students', icon: Smartphone },
           { name: 'Upload Materials', path: '/manager/upload', icon: Upload },
           { name: 'Create Assignment', path: '/manager/assignments/create', icon: PlusCircle },
           { name: 'Course Catalog', path: '/courses', icon: BookOpen },
@@ -117,6 +122,24 @@ export default function Layout({ children }) {
           adminUser={user}
         />
 
+        {/* Global Live Announcement Bar (Managed directly by Admin) */}
+        {siteSettings?.announcement_enabled && (
+          <div
+            className={`py-1.5 px-4 text-center text-xs font-medium border-b flex items-center justify-center gap-2 select-none relative z-50 ${
+              siteSettings.announcement_style === 'red'
+                ? 'bg-rose-950/90 text-rose-200 border-rose-500/30'
+                : siteSettings.announcement_style === 'emerald'
+                ? 'bg-emerald-950/90 text-emerald-200 border-emerald-500/30'
+                : 'bg-[#1c1611]/95 text-[#f5f0e8] border-[#c9a96e]/30'
+            }`}
+          >
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#c9a96e]/20 text-[#d4b87a] border border-[#c9a96e]/30">
+              {siteSettings.announcement_badge || 'NOTICE'}
+            </span>
+            <span className="truncate">{siteSettings.announcement_text}</span>
+          </div>
+        )}
+
         {/* Top Header */}
         <header className="h-16 border-b border-[#c9a96e]/15 bg-[#14100c]/85 backdrop-blur-xl sticky top-0 z-40 flex items-center justify-between px-4 sm:px-6">
           {/* Left: Brand & Mobile Toggle */}
@@ -143,11 +166,15 @@ export default function Layout({ children }) {
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="font-serif font-bold text-xs sm:text-base tracking-tight gold-gradient-text leading-tight truncate">
-                  <span className="sm:hidden">Mrs. Nashwa</span>
-                  <span className="hidden sm:inline">Mrs. Nashwa Abdelhalim</span>
+                  <span className="sm:hidden">
+                    {siteSettings?.academy_name ? siteSettings.academy_name.split(' ').slice(0, 2).join(' ') : 'Mrs. Nashwa'}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {siteSettings?.academy_name || 'Mrs. Nashwa Abdelhalim'}
+                  </span>
                 </span>
                 <span className="text-[9px] sm:text-[10px] text-[#a09787] uppercase tracking-wider font-semibold truncate">
-                  English • SAT & EST
+                  {siteSettings?.tagline || 'English • SAT & EST'}
                 </span>
               </div>
             </Link>
@@ -307,7 +334,7 @@ export default function Layout({ children }) {
                   Need question review or essay guidance from Mrs. Nashwa's team?
                 </p>
                 <a
-                  href="https://wa.me/201000000000"
+                  href={`https://wa.me/${(siteSettings?.whatsapp_number || '+201000000000').replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noreferrer"
                   className="block text-center py-2 bg-gradient-to-r from-[#c9a96e] to-[#a8894e] text-[#0d0b08] font-bold rounded-lg transition text-[11px] hover:brightness-105"

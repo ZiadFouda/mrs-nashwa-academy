@@ -18,6 +18,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import CourseManagementPage from './pages/admin/CourseManagementPage';
 import EnrollmentPage from './pages/admin/EnrollmentPage';
+import SiteSettingsPage from './pages/admin/SiteSettingsPage';
 
 // Courses & Lessons
 import CourseListPage from './pages/courses/CourseListPage';
@@ -32,6 +33,7 @@ import AssignmentResultPage from './pages/assignments/AssignmentResultPage';
 // Manager
 import UploadMaterialsPage from './pages/manager/UploadMaterialsPage';
 import CreateAssignmentPage from './pages/manager/CreateAssignmentPage';
+import ManagerStudentsPage from './pages/manager/ManagerStudentsPage';
 
 // Analytics
 import StudentAnalyticsPage from './pages/analytics/StudentAnalyticsPage';
@@ -214,7 +216,29 @@ export default function App() {
               element={<Navigate to="/admin/enrollments" replace />}
             />
 
+            <Route
+              path="/admin/site-settings"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Layout>
+                    <SiteSettingsPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Manager Routes */}
+            <Route
+              path="/manager/students"
+              element={
+                <ProtectedRoute allowedRoles={['manager', 'admin']}>
+                  <Layout>
+                    <ManagerStudentsPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
             <Route
               path="/manager/upload"
               element={
