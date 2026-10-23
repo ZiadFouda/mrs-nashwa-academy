@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import VideoPlayer from '../../components/VideoPlayer';
+import SecureDocumentViewerModal from '../../components/SecureDocumentViewerModal';
 import { LESSONS, COURSES } from '../../utils/mockData';
 import {
   ArrowLeft,
@@ -8,7 +9,7 @@ import {
   CheckCircle2,
   Lock,
   FileText,
-  Download,
+  Eye,
   Shield,
   HelpCircle,
   MessageSquare,
@@ -20,6 +21,7 @@ export default function LessonPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const [selectedPreviewDoc, setSelectedPreviewDoc] = useState(null);
   const [lessonsList, setLessonsList] = useState(LESSONS);
   const currentLessonIndex = lessonsList.findIndex((l) => l.id === id);
   const lesson = lessonsList[currentLessonIndex] || lessonsList[0];
@@ -173,11 +175,12 @@ export default function LessonPage() {
                   <span className="text-[10px] text-[#7d7465] font-mono">({mat.size})</span>
                 </div>
                 <button
-                  onClick={() => toast.success(`Downloading ${mat.name}`)}
-                  className="p-1.5 rounded-lg bg-[#241c14] hover:bg-[#32271c] text-[#f5f0e8] transition border border-[#c9a96e]/20"
-                  title="Download File"
+                  onClick={() => setSelectedPreviewDoc({ title: mat.name, ...mat })}
+                  className="px-2.5 py-1 rounded-lg bg-[#241c14] hover:bg-[#32271c] text-[#d4b87a] transition border border-[#c9a96e]/30 flex items-center gap-1.5 text-[11px] font-semibold"
+                  title="Preview in Secure Reader"
                 >
-                  <Download className="w-3.5 h-3.5 text-[#c9a96e]" />
+                  <Eye className="w-3.5 h-3.5 text-[#c9a96e]" />
+                  <span>Preview Only</span>
                 </button>
               </div>
             ))}
@@ -206,6 +209,14 @@ export default function LessonPage() {
           </button>
         </div>
       </div>
+
+      {/* Secure In-App Document Preview Modal (No Downloads) */}
+      {selectedPreviewDoc && (
+        <SecureDocumentViewerModal
+          document={selectedPreviewDoc}
+          onClose={() => setSelectedPreviewDoc(null)}
+        />
+      )}
     </div>
   );
 }

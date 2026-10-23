@@ -140,6 +140,9 @@ export default function VideoPlayer({
         onClick={togglePlay}
         className="w-full h-full object-cover cursor-pointer"
         playsInline
+        controlsList="nodownload"
+        disablePictureInPicture
+        onContextMenu={(e) => e.preventDefault()}
       />
 
       {/* Security Watermark Floating Overlay */}

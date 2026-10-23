@@ -94,10 +94,28 @@
   background: linear-gradient(135deg, #1a1510 0%, #2a2318 100%);
 }
 
-/* Protection styles */
-.protected-content {
-  user-select: none;
-  -webkit-user-select: none;
+/* Protection styles: Anti-Screenshot, Anti-Drag, Anti-Copy, Anti-Print */
+.protected-content, body {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+input, textarea {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+img, video {
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
 }
 
 .screenshot-guard {
@@ -105,20 +123,23 @@
 }
 
 .screenshot-guard:not(:focus-within) {
-  filter: blur(8px);
+  filter: blur(12px);
 }
 
 @media print {
-  .no-print {
+  * {
     display: none !important;
   }
-  body {
-    display: none !important;
+  html::before {
+    content: "SECURITY ALERT: Printing and exporting educational materials from Mrs. Nashwa Abdelhalim Academy is strictly forbidden.";
+    display: block !important;
+    font-size: 20pt !important;
+    font-weight: bold !important;
+    color: #ff3333 !important;
+    text-align: center !important;
+    padding-top: 150px !important;
+    font-family: sans-serif !important;
   }
-}
-
-.no-context-menu {
-  pointer-events: auto;
 }
 
 /* Watermark styles */

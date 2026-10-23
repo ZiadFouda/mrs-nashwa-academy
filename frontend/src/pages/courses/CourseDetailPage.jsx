@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { COURSES, LESSONS, ASSIGNMENTS } from '../../utils/mockData';
+import SecureDocumentViewerModal from '../../components/SecureDocumentViewerModal';
 import {
   BookOpen,
   PlayCircle,
@@ -9,7 +10,7 @@ import {
   FileText,
   FileCheck2,
   Clock,
-  Download,
+  Eye,
   Calendar,
   Sparkles,
   ArrowRight,
@@ -21,6 +22,7 @@ import toast from 'react-hot-toast';
 export default function CourseDetailPage() {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('lessons'); // 'lessons' | 'assignments' | 'materials'
+  const [selectedPreviewDoc, setSelectedPreviewDoc] = useState(null);
 
   const course = COURSES.find((c) => c.id === id) || COURSES[0];
   const courseLessons = LESSONS.filter((l) => l.course_id === course.id || l.course_id === 'c-sat-rw-11');
@@ -295,15 +297,24 @@ export default function CourseDetailPage() {
               </div>
 
               <button
-                onClick={() => toast.success(`Downloading protected file: ${mat.title}`)}
-                className="p-2.5 rounded-xl bg-[#1c1611] hover:bg-[#282018] text-[#a09787] hover:text-[#f5f0e8] border border-[#c9a96e]/20 transition shrink-0"
-                title="Download Material"
+                onClick={() => setSelectedPreviewDoc(mat)}
+                className="px-3 py-2 rounded-xl bg-[#241c14] hover:bg-[#32271c] text-[#d4b87a] hover:text-[#f5f0e8] border border-[#c9a96e]/30 transition shrink-0 flex items-center gap-1.5 text-xs font-semibold"
+                title="Preview in Secure Reader"
               >
-                <Download className="w-4 h-4 text-[#c9a96e]" />
+                <Eye className="w-4 h-4 text-[#c9a96e]" />
+                <span>Preview Only</span>
               </button>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Secure In-App Document Preview Modal (No Downloads) */}
+      {selectedPreviewDoc && (
+        <SecureDocumentViewerModal
+          document={selectedPreviewDoc}
+          onClose={() => setSelectedPreviewDoc(null)}
+        />
       )}
     </div>
   );
